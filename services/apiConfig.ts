@@ -1,15 +1,19 @@
-
-// Always use environment variable in production, fallback to localhost for local development
+// Configuration for API Base URL
 const getBaseUrl = () => {
-  // Check for Vite-specific environment variable
+  // 1. Check for Vite environment variable (Set this in Vercel)
+  // Example: VITE_API_URL=https://your-backend.onrender.com/api
   if (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_API_URL) {
     return (import.meta as any).env.VITE_API_URL;
   }
   
-  // Default for local development
-  // In development, Vite proxy handles '/api' -> 'http://localhost:5000/api'
-  // But if calling directly from browser code, we might need the full URL
-  return window.location.hostname === 'localhost' ? 'http://localhost:5000/api' : '/api';
+  // 2. Fallback for Local Development
+  if (window.location.hostname === 'localhost') {
+    return 'http://localhost:5000/api';
+  }
+
+  // 3. Fallback for Production (Absolute path)
+  // Replace the string below with your actual Render URL if not using env vars
+  return 'https://your-backend-url.onrender.com/api';
 };
 
 export const API_BASE_URL = getBaseUrl();
