@@ -1,6 +1,8 @@
+import dotenv from 'dotenv';
+// Load environment variables immediately before other imports
+dotenv.config();
 
 import express from 'express';
-import dotenv from 'dotenv';
 import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -13,9 +15,6 @@ import maintenanceMiddleware from './middleware/maintenanceMiddleware.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const rootDir = path.resolve(__dirname, '..'); 
-
-// Load credentials (Render handles this via dashboard, dotenv handles local)
-dotenv.config();
 
 // Initialize Database
 connectDB();
@@ -45,7 +44,6 @@ app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use(maintenanceMiddleware);
 
 // --- API ROUTES ---
-// Note: Ensure these route files exist in your 'backend/routes' folder
 app.get('/api/health', (req, res) => {
   res.status(200).json({ status: 'UP', timestamp: new Date() });
 });
