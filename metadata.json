@@ -1,0 +1,8 @@
+{
+  "name": "Copy of tot 1 Copy of 1 Copy of Copy of ShopGenius - AI E-commerce",
+  "description": "A modern, Shopify-style e-commerce platform with an AI-powered admin dashboard for content generation and analytics.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}

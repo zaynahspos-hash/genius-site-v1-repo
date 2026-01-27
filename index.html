@@ -1,0 +1,149 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ShopGenius - AI Powered E-commerce</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              primary: '#4f46e5',
+              secondary: '#1e293b',
+              accent: '#f59e0b',
+              dark: '#0f172a',
+              light: '#f8fafc'
+            }
+          }
+        }
+      }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
+    <style>
+      :root {
+        --primary: #4f46e5;
+        --secondary: #1e293b;
+        --accent: #f59e0b;
+        --light: #f8fafc;
+        --dark: #0f172a;
+      }
+      
+      body {
+        font-family: 'Inter', sans-serif;
+        background-color: var(--light);
+        color: var(--dark);
+        overflow-x: hidden;
+      }
+
+      h1, h2, h3, h4, h5, h6 {
+        font-family: 'Poppins', sans-serif;
+      }
+
+      /* Custom Scrollbar */
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+      }
+      
+      .dark ::-webkit-scrollbar-thumb {
+        background: #4b5563;
+      }
+      .dark ::-webkit-scrollbar-thumb:hover {
+        background: #6b7280;
+      }
+
+      /* Animations */
+      @keyframes marquee {
+        0% { transform: translateX(100%); }
+        100% { transform: translateX(-100%); }
+      }
+      .animate-marquee {
+        animation: marquee 20s linear infinite;
+      }
+      
+      .glass {
+        background: rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+      }
+
+      .fade-up {
+        animation: fadeUp 0.8s ease-out forwards;
+        opacity: 0;
+        transform: translateY(20px);
+      }
+
+      @keyframes fadeUp {
+        to { opacity: 1; transform: translateY(0); }
+      }
+      
+      .no-scrollbar::-webkit-scrollbar {
+        display: none;
+      }
+      .no-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "bcryptjs": "https://esm.sh/bcryptjs@^3.0.3",
+    "express-rate-limit": "https://esm.sh/express-rate-limit@^8.2.1",
+    "xss-clean": "https://esm.sh/xss-clean@^0.1.4",
+    "compression": "https://esm.sh/compression@^1.8.1",
+    "morgan": "https://esm.sh/morgan@^1.10.1",
+    "react": "https://esm.sh/react@^19.2.4",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
+    "@google/genai": "https://esm.sh/@google/genai@^1.38.0",
+    "lucide-react": "https://esm.sh/lucide-react@^0.563.0",
+    "react-router-dom": "https://esm.sh/react-router-dom@^7.13.0",
+    "mongoose": "https://esm.sh/mongoose@^9.1.5",
+    "jsonwebtoken": "https://esm.sh/jsonwebtoken@^9.0.3",
+    "express": "https://esm.sh/express@^5.2.1",
+    "dotenv": "https://esm.sh/dotenv@^17.2.3",
+    "cors": "https://esm.sh/cors@^2.8.6",
+    "path": "https://esm.sh/path@^0.12.7",
+    "url": "https://esm.sh/url@^0.11.4",
+    "crypto": "https://esm.sh/crypto@^1.0.1",
+    "recharts": "https://esm.sh/recharts@^3.7.0",
+    "cloudinary": "https://esm.sh/cloudinary@^2.9.0",
+    "multer": "https://esm.sh/multer@^2.0.2",
+    "nodemailer": "https://esm.sh/nodemailer@^7.0.12",
+    "streamifier": "https://esm.sh/streamifier@^0.1.1",
+    "winston": "https://esm.sh/winston@^3.19.0",
+    "winston-mongodb": "https://esm.sh/winston-mongodb@^7.0.1",
+    "helmet": "https://esm.sh/helmet@^8.1.0",
+    "express-mongo-sanitize": "https://esm.sh/express-mongo-sanitize@^2.2.0",
+    "hpp": "https://esm.sh/hpp@^0.2.3",
+    "fs": "https://esm.sh/fs@^0.0.1-security",
+    "express-async-handler": "https://esm.sh/express-async-handler@^1.2.0",
+    "joi": "https://esm.sh/joi@^18.0.2",
+    "vite": "https://esm.sh/vite@^7.3.1",
+    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2",
+    "react/": "https://esm.sh/react@^19.2.4/"
+  }
+}
+</script>
+</head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>
+    
