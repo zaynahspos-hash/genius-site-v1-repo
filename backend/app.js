@@ -1,31 +1,69 @@
+import dotenv from 'dotenv';
+import express from 'express';
+import cors from 'cors';
+import morgan from 'morgan';
+import cookieParser from 'cookie-parser';
+import connectDB from './config/database.js';
+import authRoutes from './routes/authRoutes.js';
+import productRoutes from './routes/productRoutes.js';
+import orderRoutes from './routes/orderRoutes.js';
+import uploadRoutes from './routes/uploadRoutes.js';
+import geminiRoutes from './routes/geminiRoutes.js';
+import errorHandler from './middleware/errorHandler.js';
 
-NODE_ENV=development
-PORT=5000
-FRONTEND_URL=http://localhost:5173
+// Load environment variables
+dotenv.config();
 
-# --- DATABASE (MongoDB Atlas) ---
-# Connection string to your specific 'shopgenius' database
-MONGO_URI=mongodb+srv://zaynahspos_db_user:dbJ6ime4PgNyJkzd@cluster0.gqwsjdu.mongodb.net/shopgenius?retryWrites=true&w=majority
+// Connect to database
+connectDB();
 
-# --- SECURITY ---
-# A secure string for signing JWT tokens
-JWT_SECRET=shopgenius_secret_key_2024_v1
-JWT_EXPIRE=30d
+const app = express();
 
-# --- GOOGLE GEMINI AI ---
-# Used for AI Product Descriptions and Shopping Assistant
-API_KEY=AIzaSyDeb07wTYj8eEVDwtEVtsYhyQG_L18FJCU
+// Get environment variables
+const NODE_ENV = process.env.NODE_ENV || 'development';
+const PORT = process.env.PORT || 5000;
+const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
 
-# --- CLOUDINARY (Media Storage: Project dqhxc4llt) ---
-CLOUDINARY_CLOUD_NAME=dqhxc4llt
-CLOUDINARY_API_KEY=324246626238232
-CLOUDINARY_API_SECRET=92pQkz97sazfb3aJyHxP0jDwKiM
-CLOUDINARY_UPLOAD_PRESET=totvogue_unsigned
+// Middleware
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
-# --- EMAIL SERVICE (Gmail SMTP) ---
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_USER=zaynahspos@gmail.com
-SMTP_PASS=yezz felk xqzn dbdw
-SMTP_FROM_EMAIL=zaynahspos@gmail.com
-SMTP_FROM_NAME=ShopGenius
+// CORS configuration
+app.use(
+  cors({
+    origin: FRONTEND_URL,
+    credentials: true,
+  })
+);
+
+// Logging in development mode
+if (NODE_ENV === 'development') {
+  app.use(morgan('dev'));
+}
+
+// Routes
+app.use('/api/auth', authRoutes);
+app.use('/api/products', productRoutes);
+app.use('/api/orders', orderRoutes);
+app.use('/api/upload', uploadRoutes);
+app.use('/api/gemini', geminiRoutes);
+
+// Health check route
+app.get('/api/health', (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: 'Server is running',
+    environment: NODE_ENV,
+  });
+});
+
+// Error handling middleware
+app.use(errorHandler);
+
+// Start server
+app.listen(PORT, () => {
+  console.log(`Server running in ${NODE_ENV} mode on port ${PORT}`);
+});
+
+export default app;
