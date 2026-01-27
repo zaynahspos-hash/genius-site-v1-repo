@@ -1,4 +1,3 @@
-
 import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
@@ -44,10 +43,10 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const rootDir = path.resolve(__dirname, '..'); 
 
-// Load credentials from Root .env file
-dotenv.config({ path: path.join(rootDir, '.env') });
+// Load credentials (Standard config for Render environment variables)
+dotenv.config();
 
-// Initialize Database (Uses MONGO_URI from credentials)
+// Initialize Database (Uses MONGO_URI from process.env)
 connectDB();
 
 const app = express();
@@ -57,7 +56,7 @@ const app = express();
 // Security Layer (Helmet, RateLimit, Sanitize)
 securitySetup(app);
 
-// CORS Policy (Uses FRONTEND_URL from credentials)
+// CORS Policy (Uses FRONTEND_URL from process.env)
 const allowedOrigins = process.env.FRONTEND_URL 
   ? process.env.FRONTEND_URL.split(',').map(url => url.trim()) 
   : ['http://localhost:5173', 'http://localhost:3000'];
@@ -151,7 +150,7 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`🚀 Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
   console.log(`📡 CORS allowed for: ${allowedOrigins.join(', ')}`);
-  console.log(`📂 Credentials loaded from Root .env`);
+  console.log(`📂 Environment variables injected and active`);
 });
 
 export default app;
