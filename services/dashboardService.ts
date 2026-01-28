@@ -8,7 +8,7 @@ export const dashboardService = {
       const res = await safeFetch(`${API_URL}/stats`, { headers: getAuthHeader('admin') });
       return await res.json();
     } catch (error) {
-       console.warn('Dashboard stats API unreachable');
+       console.warn('Dashboard stats unreachable');
        return {
          revenue: { value: 0, trend: 0 },
          orders: { value: 0, trend: 0 },
@@ -23,7 +23,7 @@ export const dashboardService = {
       const res = await safeFetch(`${API_URL}/charts?period=${period}`, { headers: getAuthHeader('admin') });
       return await res.json();
     } catch (error) {
-      console.warn('Dashboard charts API unreachable');
+      console.warn('Dashboard charts unreachable');
       return { sales: [], categories: [] };
     }
   },

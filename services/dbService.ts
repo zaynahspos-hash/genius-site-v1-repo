@@ -1,6 +1,6 @@
 import { Product, Order, DashboardStats, Category, StoreSettings, User } from '../types';
 
-// --- CLEAN SEED DATA (REMOVED DEMO ITEMS) ---
+// --- CLEAN STATE (REMOVED ALL DEMO ITEMS) ---
 
 const INITIAL_USERS: User[] = [];
 const INITIAL_CATEGORIES: Category[] = [];
@@ -55,7 +55,7 @@ const save = (key: string, data: any) => {
   localStorage.setItem(key, JSON.stringify(data));
 };
 
-// --- Mock DB Service (Now acts only as a local cache/fallback) ---
+// --- Cache Service (Previously Mock DB) ---
 
 export const db = {
   getProducts: (): Product[] => load('products', INITIAL_PRODUCTS),

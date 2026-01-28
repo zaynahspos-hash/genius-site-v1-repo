@@ -8,7 +8,7 @@ const getBaseUrl = () => {
     return envUrl.endsWith('/api') ? envUrl : `${envUrl}/api`;
   }
   
-  // 2. Local development fallback
+  // 2. Only use localhost if specifically on a local dev machine
   if (isLocalhost) {
     return 'http://localhost:5000/api';
   }
@@ -47,7 +47,7 @@ export const safeFetch = async (url: string, options: RequestInit = {}) => {
 
     if (isNetworkError) {
       console.error('API Connection Failed:', url);
-      throw new Error('Connection failed. Please check if the backend server is running and accessible.');
+      throw new Error('Our servers are currently busy. Please refresh or try again in a few seconds.');
     }
     throw error;
   }

@@ -24,7 +24,7 @@ const app = express();
 // --- MIDDLEWARE ---
 securitySetup(app);
 
-// Strict CORS whitelist for security and production stability
+// Strict CORS whitelist for production
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:3000',
@@ -32,7 +32,6 @@ const allowedOrigins = [
   'https://genius-site-v1-repo-28vizhbyr-zaynahspos-hashs-projects.vercel.app'
 ];
 
-// Dynamically allow Vercel preview and production branches
 app.use(cors({
   origin: (origin, callback) => {
     // Allow requests with no origin (like mobile apps or curl)
@@ -45,7 +44,7 @@ app.use(cors({
     if (isAllowed) {
       callback(null, true);
     } else {
-      console.warn(`CORS Blocked: ${origin}`);
+      console.warn(`CORS Blocked origin: ${origin}`);
       callback(new Error('Not allowed by CORS Policy'));
     }
   },
