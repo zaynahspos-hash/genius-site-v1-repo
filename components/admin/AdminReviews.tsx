@@ -20,10 +20,10 @@ export const AdminReviews: React.FC = () => {
           
           // CRITICAL FIX: The backend returns { reviews: [...], total: ... }
           // We must check if data is an array OR an object containing the array
-          if (Array.isArray(data)) {
-              setReviews(data);
-          } else if (data && Array.isArray(data.reviews)) {
+          if (data && Array.isArray(data.reviews)) {
               setReviews(data.reviews);
+          } else if (Array.isArray(data)) {
+              setReviews(data);
           } else {
               setReviews([]); // Fallback to empty array to prevent map() crash
           }
@@ -81,7 +81,8 @@ export const AdminReviews: React.FC = () => {
             </div>
         ) : (
             <>
-                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+                {/* DESKTOP TABLE */}
+                <div className="hidden md:block bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
                     <div className="overflow-x-auto">
                     <table className="w-full text-left">
                         <thead className="bg-gray-50 dark:bg-gray-700 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">
@@ -95,7 +96,8 @@ export const AdminReviews: React.FC = () => {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-                            {reviews.map(review => (
+                            {/* DEFENSIVE CHECK: Array.isArray */}
+                            {Array.isArray(reviews) && reviews.map(review => (
                                 <tr key={review._id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
                                     <td className="px-6 py-4">
                                         <div className="font-medium text-gray-900 dark:text-white max-w-[150px] truncate">

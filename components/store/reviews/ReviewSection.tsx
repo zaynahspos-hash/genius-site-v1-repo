@@ -144,7 +144,8 @@ export const ReviewSection: React.FC<ReviewSectionProps> = ({ productId }) => {
                 {reviews.length === 0 && <p className="text-gray-500 text-center py-10">No reviews yet. Be the first!</p>}
 
                 <div className="space-y-8">
-                    {reviews.map(review => (
+                    {/* DEFENSIVE CHECK: Ensure array before mapping */}
+                    {Array.isArray(reviews) && reviews.map(review => (
                         <div key={review._id} className="border-b border-gray-100 pb-8 last:border-0">
                             <div className="flex justify-between items-start mb-2">
                                 <div className="flex items-center gap-3">

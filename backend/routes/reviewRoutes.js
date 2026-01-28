@@ -84,9 +84,10 @@ router.get('/', optionalAuth, asyncHandler(async (req, res) => {
         };
     }
 
+    // ALWAYS return an object with a reviews array to prevent frontend crash
     res.json({
-        reviews,
-        total: reviews.length,
+        reviews: reviews || [], // Safety: fallback to empty array
+        total: reviews ? reviews.length : 0,
         breakdown
     });
 }));
