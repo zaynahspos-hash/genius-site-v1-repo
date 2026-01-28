@@ -1,7 +1,7 @@
-
-import React, { useState } from 'react';
-import { Image as ImageIcon, UploadCloud, X, Plus } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { Image as ImageIcon, UploadCloud, X, Plus, Loader2 } from 'lucide-react';
 import { AdminMedia } from '../AdminMedia';
+import { mediaService } from '../../../services/mediaService';
 
 interface ImagePickerProps {
   label?: string;
@@ -12,6 +12,8 @@ interface ImagePickerProps {
 
 export const ImagePicker: React.FC<ImagePickerProps> = ({ label, images = [], onChange, multiple = true }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleSelect = (files: any[]) => {
     const urls = files.map(f => f.url);
@@ -25,6 +27,30 @@ export const ImagePicker: React.FC<ImagePickerProps> = ({ label, images = [], on
 
   const removeImage = (index: number) => {
     onChange(images.filter((_, i) => i !== index));
+  };
+
+  const handleDirectUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setUploading(true);
+      try {
+        const files = Array.from(e.target.files) as File[];
+        const response = await mediaService.upload(files);
+        // Response structure: { message, media: [...] }
+        const newUrls = response.media.map((m: any) => m.url);
+        
+        if (multiple) {
+          onChange([...images, ...newUrls]);
+        } else {
+          onChange([newUrls[0]]);
+        }
+      } catch (err) {
+        alert('Failed to upload image directly.');
+        console.error(err);
+      } finally {
+        setUploading(false);
+        if (fileInputRef.current) fileInputRef.current.value = '';
+      }
+    }
   };
 
   return (
@@ -47,14 +73,35 @@ export const ImagePicker: React.FC<ImagePickerProps> = ({ label, images = [], on
         
         {/* Add Button */}
         {(multiple || images.length === 0) && (
-          <button
-            type="button"
-            onClick={() => setIsOpen(true)}
-            className="aspect-square flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-indigo-500 hover:bg-indigo-50 transition-colors text-gray-400 hover:text-indigo-600 bg-white"
-          >
-            <UploadCloud size={24} className="mb-1" />
-            <span className="text-xs font-bold">Add</span>
-          </button>
+          <div className="flex flex-col gap-2">
+             <button
+              type="button"
+              onClick={() => setIsOpen(true)}
+              className="aspect-square w-full flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-indigo-500 hover:bg-indigo-50 transition-colors text-gray-400 hover:text-indigo-600 bg-white"
+              title="Select from Library"
+            >
+              <ImageIcon size={24} className="mb-1" />
+              <span className="text-[10px] font-bold">Library</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading}
+              className="aspect-square w-full flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-indigo-500 hover:bg-indigo-50 transition-colors text-gray-400 hover:text-indigo-600 bg-white"
+              title="Upload New"
+            >
+              {uploading ? <Loader2 size={24} className="animate-spin mb-1"/> : <UploadCloud size={24} className="mb-1" />}
+              <span className="text-[10px] font-bold">{uploading ? '...' : 'Upload'}</span>
+            </button>
+            <input 
+              type="file" 
+              ref={fileInputRef} 
+              className="hidden" 
+              accept="image/*" 
+              multiple={multiple} 
+              onChange={handleDirectUpload} 
+            />
+          </div>
         )}
       </div>
 

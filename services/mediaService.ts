@@ -14,9 +14,13 @@ export const mediaService = {
     files.forEach(file => formData.append('files', file));
     if (folderId) formData.append('folderId', folderId);
 
+    // Note: Do NOT set Content-Type header when sending FormData, browser does it automatically with boundary
+    const headers = getAuthHeader();
+    delete (headers as any)['Content-Type'];
+
     const res = await safeFetch(API_URL, {
       method: 'POST',
-      headers: { ...getAuthHeader() }, // Do not set Content-Type for FormData
+      headers: headers,
       body: formData
     });
     return await res.json();

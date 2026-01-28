@@ -11,6 +11,10 @@ import { notFound, errorHandler } from './middleware/errorMiddleware.js';
 import securitySetup from './middleware/securityMiddleware.js';
 import maintenanceMiddleware from './middleware/maintenanceMiddleware.js';
 
+// Route Imports
+import mediaRoutes from './routes/mediaRoutes.js';
+import aiRoutes from './routes/aiRoutes.js';
+
 // --- CONFIGURATION ---
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -24,30 +28,9 @@ const app = express();
 // --- MIDDLEWARE ---
 securitySetup(app);
 
-// Strict CORS whitelist for production
-const allowedOrigins = [
-  'http://localhost:5173',
-  'http://localhost:3000',
-  'https://genius-site-v1-repo.onrender.com',
-  'https://genius-site-v1-repo-28vizhbyr-zaynahspos-hashs-projects.vercel.app'
-];
-
+// Flexible CORS for development and production
 app.use(cors({
-  origin: (origin, callback) => {
-    // Allow requests with no origin (like mobile apps or curl)
-    if (!origin) return callback(null, true);
-    
-    const isAllowed = allowedOrigins.includes(origin) || 
-                      origin.endsWith('.vercel.app') || 
-                      (process.env.FRONTEND_URL && origin === process.env.FRONTEND_URL);
-
-    if (isAllowed) {
-      callback(null, true);
-    } else {
-      console.warn(`CORS Blocked origin: ${origin}`);
-      callback(new Error('Not allowed by CORS Policy'));
-    }
-  },
+  origin: true, // Reflects the request origin
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept']
@@ -61,6 +44,9 @@ app.use(maintenanceMiddleware);
 app.get('/api/health', (req, res) => {
   res.status(200).json({ status: 'UP', timestamp: new Date(), environment: process.env.NODE_ENV });
 });
+
+app.use('/api/admin/media', mediaRoutes);
+app.use('/api/admin/ai', aiRoutes);
 
 // --- STATIC ASSETS & PRODUCTION ---
 if (process.env.NODE_ENV === 'production') {
