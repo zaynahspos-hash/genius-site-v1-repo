@@ -14,6 +14,7 @@ import maintenanceMiddleware from './middleware/maintenanceMiddleware.js';
 // Route Imports
 import mediaRoutes from './routes/mediaRoutes.js';
 import aiRoutes from './routes/aiRoutes.js';
+import authRoutes from './routes/authRoutes.js';
 
 // --- CONFIGURATION ---
 const __filename = fileURLToPath(import.meta.url);
@@ -45,6 +46,7 @@ app.get('/api/health', (req, res) => {
   res.status(200).json({ status: 'UP', timestamp: new Date(), environment: process.env.NODE_ENV });
 });
 
+app.use('/api/auth', authRoutes);
 app.use('/api/admin/media', mediaRoutes);
 app.use('/api/admin/ai', aiRoutes);
 

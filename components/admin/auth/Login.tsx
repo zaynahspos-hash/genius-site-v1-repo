@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { authService } from '../../../services/authService';
-import { Lock, Mail, Loader2, ArrowRight } from 'lucide-react';
+import { Lock, Mail, Loader2, ArrowRight, ShieldAlert } from 'lucide-react';
 
 export const Login: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -19,7 +19,12 @@ export const Login: React.FC = () => {
       await authService.login(email, password);
       navigate('/admin');
     } catch (err: any) {
-      setError(err.message || 'Invalid email or password');
+      console.error(err);
+      if (err.message.includes('Access Denied')) {
+        setError('⛔ Security Alert: This account is not authorized for admin access.');
+      } else {
+        setError(err.message || 'Invalid email or password');
+      }
     } finally {
       setLoading(false);
     }
@@ -48,9 +53,9 @@ export const Login: React.FC = () => {
         <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10 border border-gray-100">
           <form className="space-y-6" onSubmit={handleSubmit}>
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm flex items-center gap-2">
-                <div className="w-1.5 h-1.5 bg-red-600 rounded-full" />
-                {error}
+              <div className={`border px-4 py-3 rounded-lg text-sm flex items-start gap-2 ${error.includes('Security') ? 'bg-red-50 border-red-200 text-red-700' : 'bg-red-50 border-red-200 text-red-600'}`}>
+                {error.includes('Security') ? <ShieldAlert className="shrink-0 mt-0.5" size={16} /> : <div className="w-1.5 h-1.5 bg-red-600 rounded-full mt-1.5 shrink-0" />}
+                <span>{error}</span>
               </div>
             )}
             
