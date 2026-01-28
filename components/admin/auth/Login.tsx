@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { authService } from '../../../services/authService';
-import { Lock, Mail, Loader2, ArrowRight, Info } from 'lucide-react';
+import { Lock, Mail, Loader2, ArrowRight } from 'lucide-react';
 
 export const Login: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -19,7 +19,7 @@ export const Login: React.FC = () => {
       await authService.login(email, password);
       navigate('/admin');
     } catch (err: any) {
-      setError(err.message);
+      setError(err.message || 'Invalid email or password');
     } finally {
       setLoading(false);
     }
@@ -46,20 +46,10 @@ export const Login: React.FC = () => {
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10 border border-gray-100">
-          
-          <div className="mb-6 p-4 bg-indigo-50 border border-indigo-100 rounded-lg flex items-start gap-3">
-              <Info className="text-indigo-600 shrink-0 mt-0.5" size={18} />
-              <div className="text-xs text-indigo-800">
-                  <p className="font-bold mb-1 uppercase tracking-wider">Demo Credentials:</p>
-                  <p>Email: <span className="font-mono font-bold">admin@shopgenius.com</span></p>
-                  <p>Password: <span className="font-mono font-bold">admin123</span></p>
-              </div>
-          </div>
-
           <form className="space-y-6" onSubmit={handleSubmit}>
             {error && (
               <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm flex items-center gap-2">
-                <div className="w-1 h-1 bg-red-600 rounded-full" />
+                <div className="w-1.5 h-1.5 bg-red-600 rounded-full" />
                 {error}
               </div>
             )}
@@ -79,7 +69,7 @@ export const Login: React.FC = () => {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-lg py-2.5"
+                  className="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-lg py-2.5 outline-none"
                   placeholder="admin@shopgenius.com"
                 />
               </div>
@@ -100,7 +90,7 @@ export const Login: React.FC = () => {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-lg py-2.5"
+                  className="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-lg py-2.5 outline-none"
                   placeholder="••••••••"
                 />
               </div>

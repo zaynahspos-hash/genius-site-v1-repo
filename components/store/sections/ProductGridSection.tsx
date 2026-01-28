@@ -1,9 +1,8 @@
-
 import React, { useEffect, useState } from 'react';
 import { Product } from '../../../types';
 import { productService } from '../../../services/productService';
 import { ProductCard } from '../ProductCard';
-import { ArrowRight, Loader2 } from 'lucide-react';
+import { ArrowRight, Loader2, AlertCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { recommendationService } from '../../../services/recommendationService';
 import { useSettings } from '../../../contexts/SettingsContext';
@@ -24,6 +23,7 @@ interface ProductGridProps {
 export const ProductGridSection: React.FC<ProductGridProps> = ({ settings, addToCart }) => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
   const { settings: globalSettings } = useSettings();
 
@@ -33,8 +33,9 @@ export const ProductGridSection: React.FC<ProductGridProps> = ({ settings, addTo
   useEffect(() => {
     const fetchProducts = async () => {
       setLoading(true);
+      setError(null);
       try {
-        let data: Product[] = [];
+        let data: any[] = [];
         const limit = settings.limit || 8;
 
         if (settings.source === 'manual' && settings.products) {
@@ -50,9 +51,18 @@ export const ProductGridSection: React.FC<ProductGridProps> = ({ settings, addTo
             const res = await productService.getProducts({ limit });
             data = res.products;
         }
-        setProducts(data.slice(0, limit));
-      } catch (err) {
+
+        // Map backend imageUrl to frontend images array if needed
+        const mappedData = data.map(p => ({
+            ...p,
+            id: p.id || p._id,
+            images: p.images || (p.imageUrl ? [p.imageUrl] : ['https://via.placeholder.com/400'])
+        }));
+
+        setProducts(mappedData.slice(0, limit));
+      } catch (err: any) {
         console.error(err);
+        setError(err.message || 'Failed to load products');
       } finally {
         setLoading(false);
       }
@@ -60,7 +70,20 @@ export const ProductGridSection: React.FC<ProductGridProps> = ({ settings, addTo
     fetchProducts();
   }, [settings.source, settings.limit, settings.products]);
 
-  if (loading) return <div className="py-20 flex justify-center"><Loader2 className="animate-spin text-gray-300" size={32}/></div>;
+  if (loading) return (
+    <div className="py-32 flex flex-col items-center justify-center gap-4">
+        <Loader2 className="animate-spin text-gray-300" size={32}/>
+        <p className="text-xs text-gray-400 font-bold uppercase tracking-widest">Fetching Products</p>
+    </div>
+  );
+
+  if (error) return (
+    <div className="py-20 text-center flex flex-col items-center justify-center px-4">
+        <AlertCircle className="text-red-400 mb-2" size={24} />
+        <p className="text-gray-500 text-sm font-medium">Unable to display products at this time.</p>
+    </div>
+  );
+
   if (products.length === 0) return null;
 
   return (

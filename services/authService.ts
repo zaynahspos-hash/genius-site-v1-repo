@@ -1,70 +1,83 @@
 import { API_BASE_URL } from './apiConfig';
-import { db } from './dbService';
 
-const API_URL = `${API_BASE_URL}/admin`;
-
-// Default "God Mode" User - Always available
-const DEFAULT_ADMIN = {
-  _id: 'admin_1',
-  id: 'admin_1',
-  name: 'Super Admin',
-  email: 'admin@shopgenius.com',
-  role: 'admin',
-  token: 'auto-login-dev-token'
-};
+const AUTH_URL = `${API_BASE_URL}/auth`;
 
 export const authService = {
   async login(email, password) {
-    // BYPASS: Always succeed immediately
-    console.log('Login bypassed - Auto logging in');
-    this.setSession(DEFAULT_ADMIN);
-    return DEFAULT_ADMIN;
+    const res = await fetch(`${AUTH_URL}/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.message || 'Login failed');
+    }
+
+    this.setSession(data);
+    return data;
   },
 
   async register(name, email, password, storeName) {
-    // BYPASS: Create a mock user immediately
-    const newUser = { id: 'u_' + Date.now(), name, email, role: 'admin' as const, addresses: [] };
-    const data = { ...newUser, token: 'mock-jwt-token-' + Date.now() };
+    const res = await fetch(`${AUTH_URL}/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email, password, storeName }),
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.message || 'Registration failed');
+    }
+
     this.setSession(data);
     return data;
   },
 
   async forgotPassword(email: string) {
-    return { message: 'Reset link sent (Demo)' };
+    const res = await fetch(`${AUTH_URL}/forgot-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    });
+    return await res.json();
   },
 
   async resetPassword(token: string, password: string) {
-    return { success: true };
+    const res = await fetch(`${AUTH_URL}/reset-password/${token}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password }),
+    });
+    if (!res.ok) throw new Error('Failed to reset password');
+    return await res.json();
   },
 
   logout() {
     localStorage.removeItem('adminToken');
     localStorage.removeItem('adminUser');
-    // Reload to reset state, but getCurrentUser will auto-login again if accessed
-    window.location.href = '/'; 
+    window.location.href = '/#/admin/login'; 
   },
 
   getCurrentUser() {
     try {
         const stored = localStorage.getItem('adminUser');
-        if (stored) return JSON.parse(stored);
-        
-        // AUTO-LOGIN: If no user is found, create the session automatically
-        // This ensures the Login screen is skipped entirely in App.tsx
-        this.setSession(DEFAULT_ADMIN);
-        return DEFAULT_ADMIN;
+        return stored ? JSON.parse(stored) : null;
     } catch {
-        return DEFAULT_ADMIN;
+        return null;
     }
   },
 
   isAuthenticated() {
-      // Always true to bypass route protection
-      return true;
+      return !!localStorage.getItem('adminToken');
   },
 
-  setSession(user: any) {
-      localStorage.setItem('adminToken', user.token || 'mock-token');
-      localStorage.setItem('adminUser', JSON.stringify(user));
+  setSession(data: any) {
+      if (data.token) localStorage.setItem('adminToken', data.token);
+      if (data.user || data.name) {
+          const user = data.user || { id: data.id, name: data.name, email: data.email, role: data.role };
+          localStorage.setItem('adminUser', JSON.stringify(user));
+      }
   }
 };

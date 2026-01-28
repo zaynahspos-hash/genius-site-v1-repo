@@ -6,6 +6,7 @@ interface SettingsContextType {
   settings: StoreSettings | null;
   refreshSettings: () => Promise<void>;
   loading: boolean;
+  error: any;
 }
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
@@ -13,8 +14,11 @@ const SettingsContext = createContext<SettingsContextType | undefined>(undefined
 export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [settings, setSettings] = useState<StoreSettings | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<any>(null);
 
   const fetchSettings = async () => {
+    setLoading(true);
+    setError(null);
     try {
       const data = await settingsService.getSettings();
       setSettings(data);
@@ -22,12 +26,10 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       // Apply theme CSS variables globally
       if(data.theme?.colors?.primary) {
          document.documentElement.style.setProperty('--primary-color', data.theme.colors.primary);
-         // Also update Tailwind-like generic variable if we had one, 
-         // but since we use utility classes, we might need a dynamic style block for specific overrides
-         // For now, main generic overrides:
       }
-    } catch (error) {
-      console.error('Failed to load settings', error);
+    } catch (err: any) {
+      console.error('Failed to load settings', err);
+      setError(err);
     } finally {
       setLoading(false);
     }
@@ -38,7 +40,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   }, []);
 
   return (
-    <SettingsContext.Provider value={{ settings, refreshSettings: fetchSettings, loading }}>
+    <SettingsContext.Provider value={{ settings, refreshSettings: fetchSettings, loading, error }}>
       {children}
     </SettingsContext.Provider>
   );
