@@ -54,10 +54,12 @@ router.get('/', protect, admin, asyncHandler(async (req, res) => {
     if (folder === 'uncategorized') {
         query.folder = null;
     } else if (folder && folder !== 'all') {
+        // CRITICAL FIX: Validate ObjectId to prevent server crash on "folder=1"
         if (mongoose.Types.ObjectId.isValid(folder)) {
             query.folder = folder;
         } else {
-            // Invalid folder ID, return empty instead of crashing
+            // If folder ID is invalid (e.g., '1', '2'), return empty list safely
+            // This prevents the 500 Internal Server Error
             return res.json({ media: [] });
         }
     }
@@ -69,7 +71,11 @@ router.get('/', protect, admin, asyncHandler(async (req, res) => {
 }));
 
 router.post('/', protect, admin, upload.array('files'), asyncHandler(async (req, res) => {
-    const folderId = req.body.folderId === 'uncategorized' ? null : req.body.folderId;
+    let folderId = null;
+    // Validate folderId before using it
+    if (req.body.folderId && req.body.folderId !== 'uncategorized' && mongoose.Types.ObjectId.isValid(req.body.folderId)) {
+        folderId = req.body.folderId;
+    }
 
     const promises = (req.files || []).map(file => {
         return new Promise((resolve, reject) => {
@@ -84,7 +90,7 @@ router.post('/', protect, admin, upload.array('files'), asyncHandler(async (req,
                             filename: file.originalname,
                             size: result.bytes,
                             type: result.resource_type,
-                            folder: folderId || null
+                            folder: folderId
                         });
                         resolve(newMedia);
                     }
@@ -99,6 +105,9 @@ router.post('/', protect, admin, upload.array('files'), asyncHandler(async (req,
 }));
 
 router.delete('/:id', protect, admin, asyncHandler(async (req, res) => {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+        return res.status(404).json({ message: 'Invalid ID' });
+    }
     const media = await Media.findById(req.params.id);
     if (media) {
         if (media.public_id) {
@@ -112,6 +121,9 @@ router.delete('/:id', protect, admin, asyncHandler(async (req, res) => {
 }));
 
 router.put('/:id', protect, admin, asyncHandler(async (req, res) => {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+        return res.status(404).json({ message: 'Invalid ID' });
+    }
     const media = await Media.findById(req.params.id);
     if(media) {
         Object.assign(media, req.body);
@@ -131,7 +143,8 @@ router.post('/bulk-delete', protect, admin, asyncHandler(async (req, res) => {
 
 router.post('/bulk-move', protect, admin, asyncHandler(async (req, res) => {
     const { ids, folderId } = req.body;
-    await Media.updateMany({ _id: { $in: ids } }, { folder: folderId });
+    const validFolderId = mongoose.Types.ObjectId.isValid(folderId) ? folderId : null;
+    await Media.updateMany({ _id: { $in: ids } }, { folder: validFolderId });
     res.json({ message: 'Moved' });
 }));
 

@@ -17,16 +17,18 @@ export const AdminReviews: React.FC = () => {
       setError('');
       try {
           const data = await reviewService.getAllReviews(status);
+          // Safely extract reviews array from response object
           if (data && Array.isArray(data.reviews)) {
               setReviews(data.reviews);
           } else if (Array.isArray(data)) {
               setReviews(data);
           } else {
-              setReviews([]);
+              setReviews([]); // Fallback to empty array to prevent map error
           }
       } catch(e: any) { 
           console.error(e);
-          setError('Failed to load reviews');
+          setError('Failed to load reviews. ' + (e.message || ''));
+          setReviews([]); // Ensure it's an array even on error
       } 
       finally { setLoading(false); }
   };
@@ -38,6 +40,7 @@ export const AdminReviews: React.FC = () => {
       } catch(e) { alert('Failed to update status'); }
   };
 
+  // Helper to safely format dates
   const formatDate = (dateString: string) => {
       try {
           if (!dateString) return 'N/A';

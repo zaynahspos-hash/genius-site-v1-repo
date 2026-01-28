@@ -52,7 +52,7 @@ const app = express();
 securitySetup(app);
 
 app.use(cors({
-  origin: true, 
+  origin: true, // Use the origin of the request (allows Vercel apps)
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
 }));

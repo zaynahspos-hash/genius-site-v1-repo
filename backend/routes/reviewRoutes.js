@@ -3,9 +3,25 @@ import asyncHandler from 'express-async-handler';
 import Review from '../models/reviewModel.js';
 import Product from '../models/productModel.js';
 import Order from '../models/orderModel.js';
+import User from '../models/userModel.js';
+import jwt from 'jsonwebtoken';
 import { protect, admin } from '../middleware/checkAuth.js';
 
 const router = express.Router({ mergeParams: true });
+
+// Middleware to detect admin even if protect isn't enforced strictly
+const optionalAuth = async (req, res, next) => {
+  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+    try {
+      const token = req.headers.authorization.split(' ')[1];
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      req.user = await User.findById(decoded.id).select('-password');
+    } catch (error) {
+      // Token invalid or expired, continue as guest
+    }
+  }
+  next();
+};
 
 // Helper to update product rating stats
 const updateProductStats = async (productId) => {
@@ -24,16 +40,15 @@ const updateProductStats = async (productId) => {
 
 // @desc    Get Reviews
 // @route   GET /api/reviews or /api/products/:productId/reviews
-router.get('/', asyncHandler(async (req, res) => {
+router.get('/', optionalAuth, asyncHandler(async (req, res) => {
     const { productId } = req.params;
     const { status, sort } = req.query;
 
     let query = {};
     if (productId) query.product = productId;
     
-    // If public (with productId), only show approved. If admin (no productId usually), show filtered or all.
-    // However, looking at app structure, admin uses /api/admin/reviews which maps here too if not careful, 
-    // but app.js mounts generic route. Let's rely on query params.
+    // Logic: Only show 'approved' unless the user is an admin requesting specific status
+    // If user is Admin, they can see 'pending', 'rejected' via ?status= param
     if (!req.user || req.user.role !== 'admin') {
         query.status = 'approved';
     } else if (status && status !== 'all') {

@@ -1,10 +1,9 @@
-
 import React, { useState, useEffect } from 'react';
 import { mediaService } from '../../services/mediaService';
 import { 
     Upload, FolderPlus, Trash2, Search, Filter, Grid, List as ListIcon, 
     MoreHorizontal, CheckSquare, Image as ImageIcon, Video, FileText,
-    Folder, Loader2, X, Move, ChevronRight, Menu
+    Folder, Loader2, X, Move, ChevronRight, Menu, AlertCircle
 } from 'lucide-react';
 
 interface AdminMediaProps {
@@ -19,6 +18,7 @@ export const AdminMedia: React.FC<AdminMediaProps> = ({ pickerMode, onSelect, on
   const [folders, setFolders] = useState<any[]>([]);
   const [currentFolder, setCurrentFolder] = useState<any>(null); // null = All, 'uncategorized' = Uncategorized
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [stats, setStats] = useState<any>(null);
   
   // Selection
@@ -46,18 +46,29 @@ export const AdminMedia: React.FC<AdminMediaProps> = ({ pickerMode, onSelect, on
   const loadInitialData = async () => {
       try {
           const [f, s] = await Promise.all([mediaService.getFolders(), mediaService.getStats()]);
-          setFolders(f);
-          setStats(s);
-      } catch(e) { console.error(e); }
+          setFolders(Array.isArray(f) ? f : []); // Safety check
+          setStats(s || {});
+      } catch(e) { console.error("Failed to load initial media data", e); }
   };
 
   const loadMedia = async () => {
       setLoading(true);
+      setError('');
       try {
           const folderId = currentFolder?._id || (currentFolder === 'uncategorized' ? 'uncategorized' : 'all');
           const data = await mediaService.getMedia({ folder: folderId, search });
-          setMedia(data.media);
-      } catch(e) { console.error(e); }
+          // CRITICAL FIX: Ensure media is always an array
+          // This prevents "e.map is not a function" if backend returns an error object
+          if (data && Array.isArray(data.media)) {
+              setMedia(data.media);
+          } else {
+              setMedia([]);
+          }
+      } catch(e: any) { 
+          console.error("Failed to load media", e);
+          setError('Failed to load media files. ' + (e.message || ''));
+          setMedia([]); // Fallback to empty array to prevent crash
+      }
       finally { setLoading(false); }
   };
 
@@ -280,6 +291,12 @@ export const AdminMedia: React.FC<AdminMediaProps> = ({ pickerMode, onSelect, on
                                 </>
                             )}
                         </div>
+                    </div>
+                )}
+
+                {error && (
+                    <div className="p-4 bg-red-50 text-red-600 flex items-center gap-2">
+                        <AlertCircle size={18}/> {error}
                     </div>
                 )}
 
