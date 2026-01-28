@@ -1,16 +1,24 @@
-
 import mongoose from 'mongoose';
 
 const connectDB = async () => {
   try {
     if (!process.env.MONGO_URI) {
-      throw new Error('MONGO_URI is not defined in environment variables');
+      console.error('⚠️ MONGO_URI is missing in environment variables.');
+      return;
     }
-    const conn = await mongoose.connect(process.env.MONGO_URI);
+    
+    // StrictQuery is often recommended to be set
+    mongoose.set('strictQuery', false);
+
+    const conn = await mongoose.connect(process.env.MONGO_URI, {
+        serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 30s
+    });
+
     console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
   } catch (error) {
     console.error(`❌ DB Connection Error: ${error.message}`);
-    process.exit(1);
+    // We do NOT exit the process here so the server can still respond to /health checks
+    // process.exit(1); 
   }
 };
 
