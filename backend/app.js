@@ -24,9 +24,10 @@ const app = express();
 // --- MIDDLEWARE ---
 securitySetup(app);
 
+// Flexible CORS for Vercel and local dev
 const allowedOrigins = process.env.FRONTEND_URL 
   ? process.env.FRONTEND_URL.split(',').map(url => url.trim()) 
-  : ['http://localhost:5173', 'http://localhost:3000'];
+  : ['http://localhost:5173', 'http://localhost:3000', 'https://genius-site-v1-repo.onrender.com'];
 
 app.use(cors({
   origin: (origin, callback) => {
