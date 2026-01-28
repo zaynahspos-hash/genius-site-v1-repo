@@ -28,6 +28,8 @@ const app = express();
 // --- SECURITY & CORS ---
 securitySetup(app);
 
+// Allow specific origins if needed, or use origin: true for broad access during dev/test
+// Important: When using credentials: true, 'Access-Control-Allow-Origin' cannot be '*'
 app.use(cors({
   origin: true, 
   credentials: true,
@@ -51,21 +53,28 @@ const bootstrapAdmin = async () => {
         // Wait a moment for DB connection to be established
         setTimeout(async () => {
             const adminEmail = process.env.ADMIN_EMAIL || 'totvoguepk@gmail.com';
-            const userCount = await User.countDocuments({ email: adminEmail });
+            const adminPassword = 'my112233'; // Default password
             
-            if (userCount === 0) {
+            const user = await User.findOne({ email: adminEmail });
+            
+            if (!user) {
                 console.log(`⚡ Bootstrapping Admin User: ${adminEmail}`);
                 await User.create({
                     name: 'Super Admin',
                     email: adminEmail,
-                    password: 'my112233', // Default password
+                    password: adminPassword,
                     role: 'admin',
                     addresses: [],
                     wishlist: []
                 });
-                console.log('✅ Admin User Created Successfully. You can now login.');
+                console.log('✅ Admin User Created Successfully.');
             } else {
-                console.log(`ℹ️ Admin User (${adminEmail}) detected.`);
+                console.log(`ℹ️ Admin User found. Resetting password to ensure access...`);
+                // Force reset password to ensure it matches hardcoded credentials
+                user.password = adminPassword;
+                user.role = 'admin'; // Ensure role is admin
+                await user.save();
+                console.log(`✅ Admin Password Reset to: ${adminPassword}`);
             }
         }, 3000); // 3 second delay
     } catch (error) {
