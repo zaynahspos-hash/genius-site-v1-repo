@@ -18,14 +18,13 @@ export const AdminReviews: React.FC = () => {
       try {
           const data = await reviewService.getAllReviews(status);
           
-          // CRITICAL FIX: The backend returns { reviews: [...], total: ... }
-          // We must check if data is an array OR an object containing the array
+          // CRITICAL FIX: Ensure 'reviews' is always an array
           if (data && Array.isArray(data.reviews)) {
               setReviews(data.reviews);
           } else if (Array.isArray(data)) {
               setReviews(data);
           } else {
-              setReviews([]); // Fallback to empty array to prevent map() crash
+              setReviews([]); // Fallback to empty array to prevent crash
           }
       } catch(e: any) { 
           console.error("Review Fetch Error:", e);
@@ -81,7 +80,6 @@ export const AdminReviews: React.FC = () => {
             </div>
         ) : (
             <>
-                {/* DESKTOP TABLE */}
                 <div className="hidden md:block bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
                     <div className="overflow-x-auto">
                     <table className="w-full text-left">
@@ -96,7 +94,7 @@ export const AdminReviews: React.FC = () => {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-                            {/* DEFENSIVE CHECK: Array.isArray */}
+                            {/* DEFENSIVE CHECK: Prevent crash if reviews is undefined */}
                             {Array.isArray(reviews) && reviews.map(review => (
                                 <tr key={review._id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
                                     <td className="px-6 py-4">
