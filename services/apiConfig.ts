@@ -12,7 +12,6 @@ const getBaseUrl = () => {
   }
 
   // 3. Fallback for Production (Aapka Render Backend Link)
-  // Humne direct /api append kar diya hai taake endpoints sahi rahein
   return 'https://genius-site-v1-repo.onrender.com/api';
 };
 
