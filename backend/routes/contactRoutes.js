@@ -1,25 +1,29 @@
 import express from 'express';
+import asyncHandler from 'express-async-handler';
+import Contact from '../models/contactModel.js';
 import { protect, admin } from '../middleware/checkAuth.js';
 
 const router = express.Router();
 
-// Public: Submit contact form
-router.post('/', (req, res) => {
-    // In a real app, save to DB or send email
+router.post('/', asyncHandler(async (req, res) => {
+    await Contact.create(req.body);
     res.status(201).json({ message: 'Message sent successfully' });
-});
+}));
 
-// Admin: Get all submissions
-router.get('/', protect, admin, (req, res) => {
-    res.json([
-        { _id: '1', name: 'Alice', email: 'alice@example.com', subject: 'Inquiry', message: 'Hello', status: 'new', createdAt: new Date() },
-        { _id: '2', name: 'Bob', email: 'bob@example.com', subject: 'Support', message: 'Help needed', status: 'read', createdAt: new Date() }
-    ]);
-});
+router.get('/', protect, admin, asyncHandler(async (req, res) => {
+    const submissions = await Contact.find({}).sort({ createdAt: -1 });
+    res.json(submissions);
+}));
 
-// Admin: Update submission status
-router.put('/:id', protect, admin, (req, res) => {
-    res.json({ message: 'Updated successfully' });
-});
+router.put('/:id', protect, admin, asyncHandler(async (req, res) => {
+    const contact = await Contact.findById(req.params.id);
+    if (contact) {
+        contact.status = req.body.status || contact.status;
+        await contact.save();
+        res.json(contact);
+    } else {
+        res.status(404); throw new Error('Not Found');
+    }
+}));
 
 export default router;
