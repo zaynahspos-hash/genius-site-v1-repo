@@ -5,18 +5,25 @@ import express from 'express';
 import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import mongoose from 'mongoose'; // Added for debug check
+import mongoose from 'mongoose';
 import connectDB from './config/db.js';
 import { notFound, errorHandler } from './middleware/errorMiddleware.js';
 import securitySetup from './middleware/securityMiddleware.js';
 import maintenanceMiddleware from './middleware/maintenanceMiddleware.js';
 import User from './models/userModel.js'; 
 
-// Route Imports
+// --- ROUTE IMPORTS ---
+import authRoutes from './routes/authRoutes.js';
 import mediaRoutes from './routes/mediaRoutes.js';
 import aiRoutes from './routes/aiRoutes.js';
-import authRoutes from './routes/authRoutes.js';
 import productRoutes from './routes/productRoutes.js';
+import dashboardRoutes from './routes/dashboardRoutes.js';
+import settingsRoutes from './routes/settingsRoutes.js';
+import orderRoutes from './routes/orderRoutes.js';
+import categoryRoutes from './routes/categoryRoutes.js';
+import inventoryRoutes from './routes/inventoryRoutes.js';
+import customerRoutes from './routes/customerRoutes.js';
+import collectionRoutes from './routes/collectionRoutes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -53,7 +60,7 @@ const bootstrapAdmin = async () => {
             const adminEmail = process.env.ADMIN_EMAIL || 'totvoguepk@gmail.com';
             const adminPassword = 'my112233'; 
             
-            if (mongoose.connection.readyState !== 1) return; // Skip if DB not ready
+            if (mongoose.connection.readyState !== 1) return; 
 
             const user = await User.findOne({ email: adminEmail });
             
@@ -69,7 +76,6 @@ const bootstrapAdmin = async () => {
                 });
                 console.log('✅ Admin User Created Successfully.');
             } else {
-                // Ensure role is correct
                 if (user.role !== 'admin') {
                     user.role = 'admin';
                     await user.save();
@@ -84,12 +90,11 @@ bootstrapAdmin();
 
 // --- API ROUTES ---
 
-// Simple Health Check
+// Health Checks
 app.get('/api/health', (req, res) => {
   res.status(200).json({ status: 'UP', env: process.env.NODE_ENV });
 });
 
-// Deep System Diagnostics Endpoint
 app.get('/api/health/system', async (req, res) => {
     const dbState = mongoose.connection.readyState;
     const dbStatusMap = {
@@ -110,16 +115,34 @@ app.get('/api/health/system', async (req, res) => {
             NODE_ENV: process.env.NODE_ENV,
             HAS_MONGO_URI: !!process.env.MONGO_URI,
             HAS_JWT_SECRET: !!process.env.JWT_SECRET,
-            HAS_API_KEY: !!process.env.API_KEY, // Gemini
+            HAS_API_KEY: !!process.env.API_KEY, 
             HAS_CLOUDINARY: !!process.env.CLOUDINARY_CLOUD_NAME
         }
     });
 });
 
+// Mount Functionality Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/products', productRoutes);
+app.use('/api/orders', orderRoutes);
+
+// Admin Specific Routes
 app.use('/api/admin/media', mediaRoutes);
 app.use('/api/admin/ai', aiRoutes);
-app.use('/api/products', productRoutes);
+app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/admin/categories', categoryRoutes);
+app.use('/api/admin/collections', collectionRoutes);
+app.use('/api/admin/inventory', inventoryRoutes);
+app.use('/api/admin/customers', customerRoutes);
+
+// Settings (Handlers for both public /api/settings and /api/admin/settings)
+app.use('/api/settings', settingsRoutes);
+app.use('/api/admin/settings', settingsRoutes);
+
+// API 404 Catch-all (Prevents HTML response for missing API routes)
+app.use('/api/*', (req, res) => {
+    res.status(404).json({ message: `API Endpoint Not Found: ${req.originalUrl}` });
+});
 
 // --- PRODUCTION SERVING ---
 if (process.env.NODE_ENV === 'production') {
@@ -127,6 +150,7 @@ if (process.env.NODE_ENV === 'production') {
   app.use(express.static(distPath));
   
   app.get('*', (req, res) => {
+    // Double check it's not an api route that slipped through
     if (req.path.startsWith('/api')) {
        return res.status(404).json({ message: 'API Route not found' });
     }
