@@ -24,6 +24,7 @@ import categoryRoutes from './routes/categoryRoutes.js';
 import inventoryRoutes from './routes/inventoryRoutes.js';
 import customerRoutes from './routes/customerRoutes.js';
 import collectionRoutes from './routes/collectionRoutes.js';
+import reportRoutes from './routes/reportRoutes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -134,6 +135,7 @@ app.use('/api/admin/categories', categoryRoutes);
 app.use('/api/admin/collections', collectionRoutes);
 app.use('/api/admin/inventory', inventoryRoutes);
 app.use('/api/admin/customers', customerRoutes);
+app.use('/api/reports', reportRoutes);
 
 // Settings (Handlers for both public /api/settings and /api/admin/settings)
 app.use('/api/settings', settingsRoutes);
