@@ -31,13 +31,19 @@ export const ReviewSection: React.FC<ReviewSectionProps> = ({ productId }) => {
     setLoading(true);
     try {
         const data = await reviewService.getProductReviews(productId, { sort });
-        // SAFETY CHECK: Ensure reviews is an array before setting
-        setReviews(Array.isArray(data?.reviews) ? data.reviews : []);
+        // SAFETY CHECK: Extract array correctly
+        if (data && Array.isArray(data.reviews)) {
+            setReviews(data.reviews);
+        } else if (Array.isArray(data)) {
+            setReviews(data);
+        } else {
+            setReviews([]);
+        }
         setBreakdown(data?.breakdown || {});
         setTotal(data?.total || 0);
     } catch(e) { 
         console.error("Review fetch error:", e);
-        setReviews([]); // Fallback to empty array
+        setReviews([]); 
     } 
     finally { setLoading(false); }
   };

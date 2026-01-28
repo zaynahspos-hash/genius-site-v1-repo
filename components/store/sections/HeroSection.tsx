@@ -51,7 +51,7 @@ export const HeroSection: React.FC<HeroProps> = ({ settings }) => {
           {/* Background Image */}
           <div className="absolute inset-0">
              <img 
-                src={slide.image || 'https://via.placeholder.com/1920x800'} 
+                src={slide.image || 'https://placehold.co/1920x800/222/fff?text=Hero+Image'} 
                 className="w-full h-full object-cover" 
                 alt={slide.heading}
              />

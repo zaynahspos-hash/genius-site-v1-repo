@@ -18,21 +18,19 @@ export const AdminReviews: React.FC = () => {
       try {
           const data = await reviewService.getAllReviews(status);
           
-          // CRITICAL FIX: Ensure we extract the array correctly
-          // The backend returns { reviews: [...], total: 0 }
-          // If data is null/undefined, fallback to []
-          if (data && Array.isArray(data.reviews)) {
-              setReviews(data.reviews);
-          } else if (Array.isArray(data)) {
-              // Fallback if backend structure changes
+          // CRITICAL FIX: The backend returns { reviews: [...], total: ... }
+          // We must check if data is an array OR an object containing the array
+          if (Array.isArray(data)) {
               setReviews(data);
+          } else if (data && Array.isArray(data.reviews)) {
+              setReviews(data.reviews);
           } else {
-              setReviews([]);
+              setReviews([]); // Fallback to empty array to prevent map() crash
           }
       } catch(e: any) { 
           console.error("Review Fetch Error:", e);
           setError('Failed to load reviews. ' + (e.message || ''));
-          setReviews([]); // Prevent crash by setting empty array
+          setReviews([]); // Safety fallback
       } 
       finally { setLoading(false); }
   };
