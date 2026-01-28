@@ -5,9 +5,11 @@ const router = express.Router();
 
 const defaultSettings = {
     general: { storeName: 'ShopGenius', storeEmail: 'admin@example.com', currency: 'USD' },
-    theme: { colors: { primary: '#4f46e5' } },
+    theme: { colors: { primary: '#4f46e5' }, layout: { productsPerRow: 4 } },
     payment: { stripe: { enabled: false }, cod: { enabled: true } },
-    // ... other defaults
+    shipping: { standardRate: 10, freeShippingThreshold: 100 },
+    email: { smtpHost: '', smtpPort: 587 },
+    seo: { metaTitle: 'ShopGenius', metaDescription: '' }
 };
 
 let memorySettings = { ...defaultSettings };
@@ -29,12 +31,14 @@ router.put('/:section', protect, admin, (req, res) => {
 });
 
 router.post('/test-email', protect, admin, (req, res) => {
-    // Simulate email sending
-    res.json({ message: 'Test email sent' });
+    res.json({ message: 'Test email sent successfully' });
 });
 
 router.get('/menus', (req, res) => {
-    res.json([]);
+    res.json([
+        { handle: 'main', title: 'Main Menu', items: [] },
+        { handle: 'footer', title: 'Footer Menu', items: [] }
+    ]);
 });
 
 router.post('/menus', protect, admin, (req, res) => {

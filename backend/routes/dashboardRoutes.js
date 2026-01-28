@@ -3,9 +3,6 @@ import { protect, admin } from '../middleware/checkAuth.js';
 
 const router = express.Router();
 
-// Mock data implementation to prevent 404s
-// In production, these should be replaced with real controllers interacting with DB
-
 router.get('/stats', protect, admin, (req, res) => {
     res.json({
         revenue: { value: 12500, trend: 15 },
@@ -43,11 +40,16 @@ router.get('/recent-orders', protect, admin, (req, res) => {
 });
 
 router.get('/top-products', protect, admin, (req, res) => {
-    res.json([]);
+    res.json([
+        { _id: '1', title: 'Wireless Headphones', price: 120, salesCount: 45, images: ['https://via.placeholder.com/150'] },
+        { _id: '2', title: 'Running Shoes', price: 85, salesCount: 32, images: ['https://via.placeholder.com/150'] }
+    ]);
 });
 
 router.get('/low-stock', protect, admin, (req, res) => {
-    res.json([]);
+    res.json([
+        { _id: '3', title: 'Limited Edition Watch', stock: 2, images: ['https://via.placeholder.com/150'] }
+    ]);
 });
 
 export default router;

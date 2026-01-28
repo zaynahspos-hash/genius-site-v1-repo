@@ -57,6 +57,7 @@ app.use((req, res, next) => {
 // --- BOOTSTRAP ADMIN USER ---
 const bootstrapAdmin = async () => {
     try {
+        // Wait a moment for DB connection
         setTimeout(async () => {
             const adminEmail = process.env.ADMIN_EMAIL || 'totvoguepk@gmail.com';
             const adminPassword = 'my112233'; 
