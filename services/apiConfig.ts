@@ -1,18 +1,20 @@
 // Configuration for API Base URL
 const getBaseUrl = () => {
-  // 1. Check for Vite environment variable (Set this in Vercel settings as VITE_API_URL)
-  // Casting import.meta to any for environment access in this context
+  const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  
+  // 1. Prioritize Vite environment variable (Set VITE_API_URL in Vercel settings)
   const envUrl = (import.meta as any).env?.VITE_API_URL;
   if (envUrl) {
     return envUrl.endsWith('/api') ? envUrl : `${envUrl}/api`;
   }
   
-  // 2. Fallback for Local Development
-  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+  // 2. Local development fallback
+  if (isLocalhost) {
     return 'http://localhost:5000/api';
   }
 
-  // 3. Fallback for Production (Render)
+  // 3. Absolute Production fallback (Render)
+  // This ensures that even if env vars are missing, the app doesn't try to call localhost:5000 on Vercel
   return 'https://genius-site-v1-repo.onrender.com/api';
 };
 
@@ -23,16 +25,29 @@ export const API_BASE_URL = getBaseUrl();
  */
 export const safeFetch = async (url: string, options: RequestInit = {}) => {
   try {
-    const response = await fetch(url, options);
+    const response = await fetch(url, {
+      ...options,
+      headers: {
+        'Accept': 'application/json',
+        ...options.headers,
+      }
+    });
+
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || `Server responded with status: ${response.status}`);
+      throw new Error(errorData.message || `Server Error (${response.status})`);
     }
     return response;
   } catch (error: any) {
-    // Handle technical connection errors (like net::ERR_CONNECTION_REFUSED or CORS blocks)
-    if (error.name === 'TypeError' && (error.message === 'Failed to fetch' || error.message.includes('NetworkError'))) {
-      throw new Error('Our servers are currently busy or unreachable. Please refresh and try again in a few seconds.');
+    const isNetworkError = 
+      error.name === 'TypeError' || 
+      error.message.includes('fetch') || 
+      error.message.includes('NetworkError') || 
+      error.message.includes('Failed to fetch');
+
+    if (isNetworkError) {
+      console.error('API Connection Failed:', url);
+      throw new Error('Connection failed. Please check if the backend server is running and accessible.');
     }
     throw error;
   }

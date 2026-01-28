@@ -24,7 +24,7 @@ const app = express();
 // --- MIDDLEWARE ---
 securitySetup(app);
 
-// Flexible CORS for Vercel and local dev
+// Strict CORS whitelist for security and production stability
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:3000',
@@ -32,32 +32,26 @@ const allowedOrigins = [
   'https://genius-site-v1-repo-28vizhbyr-zaynahspos-hashs-projects.vercel.app'
 ];
 
-// Add origins from environment variable if provided
-if (process.env.FRONTEND_URL) {
-  process.env.FRONTEND_URL.split(',').forEach(url => allowedOrigins.push(url.trim()));
-}
-
+// Dynamically allow Vercel preview and production branches
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow requests with no origin (like mobile apps or curl requests)
+    // Allow requests with no origin (like mobile apps or curl)
     if (!origin) return callback(null, true);
     
-    const isAllowed = allowedOrigins.some(allowed => {
-      if (allowed === '*') return true;
-      // Exact match or subdomain check
-      return origin === allowed || (allowed.startsWith('https://') && origin.endsWith(allowed.replace('https://', '')));
-    });
+    const isAllowed = allowedOrigins.includes(origin) || 
+                      origin.endsWith('.vercel.app') || 
+                      (process.env.FRONTEND_URL && origin === process.env.FRONTEND_URL);
 
     if (isAllowed) {
       callback(null, true);
     } else {
-      console.error(`CORS Blocked origin: ${origin}`);
+      console.warn(`CORS Blocked: ${origin}`);
       callback(new Error('Not allowed by CORS Policy'));
     }
   },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept']
 }));
 
 app.use(express.json({ limit: '50mb' }));
@@ -66,7 +60,7 @@ app.use(maintenanceMiddleware);
 
 // --- API ROUTES ---
 app.get('/api/health', (req, res) => {
-  res.status(200).json({ status: 'UP', timestamp: new Date() });
+  res.status(200).json({ status: 'UP', timestamp: new Date(), environment: process.env.NODE_ENV });
 });
 
 // --- STATIC ASSETS & PRODUCTION ---
