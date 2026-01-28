@@ -9,6 +9,7 @@ import connectDB from './config/db.js';
 import { notFound, errorHandler } from './middleware/errorMiddleware.js';
 import securitySetup from './middleware/securityMiddleware.js';
 import maintenanceMiddleware from './middleware/maintenanceMiddleware.js';
+import User from './models/userModel.js'; // Import User for bootstrapping
 
 // Route Imports
 import mediaRoutes from './routes/mediaRoutes.js';
@@ -27,21 +28,8 @@ const app = express();
 // --- SECURITY & CORS ---
 securitySetup(app);
 
-// Allow specific origins if needed, or use origin: true for broad access during dev/test
-// Important: When using credentials: true, 'Access-Control-Allow-Origin' cannot be '*'
-const allowedOrigins = [
-  'http://localhost:5173',
-  'http://localhost:3000',
-  process.env.FRONTEND_URL // Production URL
-].filter(Boolean);
-
 app.use(cors({
-  origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-    // In development/testing allow all, or strictly check allowedOrigins
-    return callback(null, true); 
-  },
+  origin: true, 
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
 }));
@@ -56,9 +44,38 @@ app.use((req, res, next) => {
     next();
 });
 
+// --- BOOTSTRAP ADMIN USER ---
+// Automatically ensure the admin user exists on server start
+const bootstrapAdmin = async () => {
+    try {
+        // Wait a moment for DB connection to be established
+        setTimeout(async () => {
+            const adminEmail = process.env.ADMIN_EMAIL || 'totvoguepk@gmail.com';
+            const userCount = await User.countDocuments({ email: adminEmail });
+            
+            if (userCount === 0) {
+                console.log(`⚡ Bootstrapping Admin User: ${adminEmail}`);
+                await User.create({
+                    name: 'Super Admin',
+                    email: adminEmail,
+                    password: 'my112233', // Default password
+                    role: 'admin',
+                    addresses: [],
+                    wishlist: []
+                });
+                console.log('✅ Admin User Created Successfully. You can now login.');
+            } else {
+                console.log(`ℹ️ Admin User (${adminEmail}) detected.`);
+            }
+        }, 3000); // 3 second delay
+    } catch (error) {
+        console.error('Bootstrap Error:', error.message);
+    }
+};
+bootstrapAdmin();
+
 // --- API ROUTES ---
 app.get('/api/health', (req, res) => {
-  // Simple health check that doesn't rely on DB status to return 200
   res.status(200).json({ 
       status: 'UP', 
       env: process.env.NODE_ENV 
@@ -78,7 +95,6 @@ if (process.env.NODE_ENV === 'production') {
     if (req.path.startsWith('/api')) {
        return res.status(404).json({ message: 'API Route not found' });
     }
-    // Check if index.html exists before trying to send it
     res.sendFile(path.resolve(distPath, 'index.html'), (err) => {
         if (err) {
             res.status(500).send("Server Error: Frontend build not found.");
@@ -99,7 +115,6 @@ app.use(errorHandler);
 process.on('uncaughtException', (err) => {
     console.error('UNCAUGHT EXCEPTION! 💥 Shutting down gracefully...');
     console.error(err.name, err.message);
-    // process.exit(1); 
 });
 
 const PORT = process.env.PORT || 5000;

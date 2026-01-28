@@ -7,15 +7,29 @@ import User from '../models/userModel.js';
 // @access  Public
 const authUser = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
+  
+  // Basic Validation
+  if (!email || !password) {
+    res.status(400);
+    throw new Error('Please provide both email and password');
+  }
+
+  console.log(`🔐 Login attempt for: ${email}`);
 
   const user = await User.findOne({ email });
 
-  if (user && (await user.matchPassword(password))) {
-    // Optional: Pre-check for admin login attempts
-    if (process.env.ADMIN_EMAIL && email !== process.env.ADMIN_EMAIL) {
-       // Allow them to log in, but frontend should redirect them away from admin dashboard
-       // or we can strictly block them here if this is ONLY for admin login page
-    }
+  if (!user) {
+    console.log(`❌ User not found: ${email}`);
+    // Security: Usually we return generic message, but for this admin setup debugging:
+    res.status(401);
+    throw new Error('User not found. Please Register or check Admin Email.');
+  }
+
+  if (await user.matchPassword(password)) {
+    console.log(`✅ Login successful: ${email}`);
+    
+    // Optional: Pre-check for admin login attempts if needed
+    // if (process.env.ADMIN_EMAIL && email !== process.env.ADMIN_EMAIL) { ... }
 
     res.json({
       _id: user._id,
@@ -25,6 +39,7 @@ const authUser = asyncHandler(async (req, res) => {
       token: generateToken(user._id),
     });
   } else {
+    console.log(`❌ Invalid password for: ${email}`);
     res.status(401);
     throw new Error('Invalid email or password');
   }
@@ -43,8 +58,9 @@ const registerUser = asyncHandler(async (req, res) => {
     throw new Error('User already exists');
   }
 
-  // Auto-promote to admin ONLY if email matches the secret env variable
-  const role = (email === process.env.ADMIN_EMAIL) ? 'admin' : 'customer';
+  // Auto-promote to admin ONLY if email matches the secret env variable OR the hardcoded fallback
+  const adminEmail = process.env.ADMIN_EMAIL || 'totvoguepk@gmail.com';
+  const role = (email === adminEmail) ? 'admin' : 'customer';
 
   const user = await User.create({
     name,
