@@ -58,7 +58,7 @@ export const StoreHome: React.FC<StoreHomeProps> = ({ addToCart, previewSettings
       {sections.length === 0 && (
           <div className="py-20 text-center">
               <h2 className="text-2xl font-bold text-gray-300">No sections configured</h2>
-              <p className="text-gray-400">Go to Admin {" > "} Homepage to customize your store.</p>
+              <p className="text-gray-400">Go to Admin &gt; Homepage to customize your store.</p>
           </div>
       )}
     </div>
