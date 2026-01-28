@@ -25,6 +25,19 @@ import inventoryRoutes from './routes/inventoryRoutes.js';
 import customerRoutes from './routes/customerRoutes.js';
 import collectionRoutes from './routes/collectionRoutes.js';
 import reportRoutes from './routes/reportRoutes.js';
+import contactRoutes from './routes/contactRoutes.js';
+import reviewRoutes from './routes/reviewRoutes.js';
+import couponRoutes from './routes/couponRoutes.js';
+import blogRoutes from './routes/blogRoutes.js';
+import pageRoutes from './routes/pageRoutes.js';
+import seoRoutes from './routes/seoRoutes.js';
+
+// --- NEW ROUTE IMPORTS ---
+import storeRoutes from './routes/storeRoutes.js';
+import customerAuthRoutes from './routes/customerAuthRoutes.js';
+import giftCardRoutes from './routes/giftCardRoutes.js';
+import recommendationRoutes from './routes/recommendationRoutes.js';
+import uploadRoutes from './routes/uploadRoutes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -57,7 +70,6 @@ app.use((req, res, next) => {
 // --- BOOTSTRAP ADMIN USER ---
 const bootstrapAdmin = async () => {
     try {
-        // Wait a moment for DB connection
         setTimeout(async () => {
             const adminEmail = process.env.ADMIN_EMAIL || 'totvoguepk@gmail.com';
             const adminPassword = 'my112233'; 
@@ -127,6 +139,14 @@ app.get('/api/health/system', async (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
+app.use('/api/reviews', reviewRoutes); // Public/Client reviews
+
+// Storefront Specific Routes (NEW)
+app.use('/api/store/recommendations', recommendationRoutes);
+app.use('/api/store', storeRoutes);
+app.use('/api/customer', customerAuthRoutes);
+app.use('/api/gift-cards', giftCardRoutes);
+app.use('/api/upload', uploadRoutes); // Dedicated upload for product images
 
 // Admin Specific Routes
 app.use('/api/admin/media', mediaRoutes);
@@ -136,9 +156,17 @@ app.use('/api/admin/categories', categoryRoutes);
 app.use('/api/admin/collections', collectionRoutes);
 app.use('/api/admin/inventory', inventoryRoutes);
 app.use('/api/admin/customers', customerRoutes);
+app.use('/api/admin/reviews', reviewRoutes); // Admin review management
+app.use('/api/admin/coupons', couponRoutes);
 app.use('/api/reports', reportRoutes);
 
-// Settings (Handlers for both public /api/settings and /api/admin/settings)
+// Content Routes (Shared & Admin)
+app.use('/api/contact', contactRoutes);
+app.use('/api/blog', blogRoutes);
+app.use('/api/pages', pageRoutes);
+app.use('/api/seo', seoRoutes);
+
+// Settings
 app.use('/api/settings', settingsRoutes);
 app.use('/api/admin/settings', settingsRoutes);
 
@@ -153,7 +181,6 @@ if (process.env.NODE_ENV === 'production') {
   app.use(express.static(distPath));
   
   app.get('*', (req, res) => {
-    // Double check it's not an api route that slipped through
     if (req.path.startsWith('/api')) {
        return res.status(404).json({ message: 'API Route not found' });
     }
