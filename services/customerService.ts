@@ -1,5 +1,5 @@
 import { User, Order, Address, Product } from '../types';
-import { API_BASE_URL, getAuthHeader } from './apiConfig';
+import { API_BASE_URL, getAuthHeader, safeFetch } from './apiConfig';
 
 const API_URL = `${API_BASE_URL}/customer`;
 
@@ -38,6 +38,7 @@ export const customerService = {
   logout() {
     localStorage.removeItem('customerToken');
     localStorage.removeItem('customerUser');
+    window.location.href = '/login'; // Redirect to ensure state clears
   },
 
   setSession(data: any) {
@@ -55,15 +56,24 @@ export const customerService = {
 
   // --- Profile ---
   async getProfile() {
-    const res = await fetch(`${API_URL}/profile`, { headers: getAuthHeader('customer') });
-    if (!res.ok) throw new Error('Failed to fetch profile');
-    const user = await res.json();
-    // Update local storage user info just in case
-    const current = this.getCurrentUser();
-    if(current) {
-        localStorage.setItem('customerUser', JSON.stringify({ ...current, ...user }));
+    try {
+        const res = await fetch(`${API_URL}/profile`, { headers: getAuthHeader('customer') });
+        if (res.status === 401) {
+            this.logout();
+            return null;
+        }
+        if (!res.ok) throw new Error('Failed to fetch profile');
+        const user = await res.json();
+        // Update local storage user info just in case
+        const current = this.getCurrentUser();
+        if(current) {
+            localStorage.setItem('customerUser', JSON.stringify({ ...current, ...user }));
+        }
+        return user;
+    } catch (e) {
+        console.warn('Profile fetch failed:', e);
+        throw e;
     }
-    return user;
   },
 
   async updateProfile(data: any) {
@@ -84,6 +94,10 @@ export const customerService = {
   // --- Orders ---
   async getOrders() {
     const res = await fetch(`${API_URL}/orders`, { headers: getAuthHeader('customer') });
+    if (res.status === 401) {
+        this.logout(); 
+        return [];
+    }
     if (!res.ok) throw new Error('Failed to fetch orders');
     return await res.json();
   },
@@ -121,6 +135,10 @@ export const customerService = {
       },
       body: JSON.stringify({ productId }),
     });
+    if (res.status === 401) {
+        // Don't auto-logout on wishlist toggle, just return error
+        throw new Error('Please login first');
+    }
     if (!res.ok) throw new Error('Failed to update wishlist');
     return await res.json();
   }

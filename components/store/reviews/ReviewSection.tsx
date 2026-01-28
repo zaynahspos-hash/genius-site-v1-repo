@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Star, ThumbsUp, CheckCircle, Image as ImageIcon, X, Camera, PenTool } from 'lucide-react';
+import { Star, ThumbsUp, CheckCircle, Image as ImageIcon, X, Camera, PenTool, AlertCircle } from 'lucide-react';
 import { reviewService } from '../../../services/reviewService';
 import { customerService } from '../../../services/customerService';
 import { productService } from '../../../services/productService'; // Reuse upload
@@ -13,6 +13,7 @@ export const ReviewSection: React.FC<ReviewSectionProps> = ({ productId }) => {
   const [breakdown, setBreakdown] = useState<any>({});
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [sort, setSort] = useState('newest');
   
@@ -27,12 +28,17 @@ export const ReviewSection: React.FC<ReviewSectionProps> = ({ productId }) => {
   }, [productId, sort]);
 
   const fetchReviews = async () => {
+    setLoading(true);
     try {
         const data = await reviewService.getProductReviews(productId, { sort });
-        setReviews(data.reviews);
-        setBreakdown(data.breakdown);
-        setTotal(data.total);
-    } catch(e) { console.error(e); } 
+        // SAFETY CHECK: Ensure reviews is an array before setting
+        setReviews(Array.isArray(data?.reviews) ? data.reviews : []);
+        setBreakdown(data?.breakdown || {});
+        setTotal(data?.total || 0);
+    } catch(e) { 
+        console.error("Review fetch error:", e);
+        setReviews([]); // Fallback to empty array
+    } 
     finally { setLoading(false); }
   };
 

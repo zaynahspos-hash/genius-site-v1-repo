@@ -15,7 +15,9 @@ const optionalAuth = async (req, res, next) => {
     try {
       const token = req.headers.authorization.split(' ')[1];
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      req.user = await User.findById(decoded.id).select('-password');
+      if (decoded && decoded.id) {
+          req.user = await User.findById(decoded.id).select('-password');
+      }
     } catch (error) {
       // Token invalid or expired, continue as guest
     }
@@ -48,7 +50,7 @@ router.get('/', optionalAuth, asyncHandler(async (req, res) => {
     if (productId) query.product = productId;
     
     // Logic: Only show 'approved' unless the user is an admin requesting specific status
-    // If user is Admin, they can see 'pending', 'rejected' via ?status= param
+    // Safe check for req.user existence
     if (!req.user || req.user.role !== 'admin') {
         query.status = 'approved';
     } else if (status && status !== 'all') {
@@ -95,6 +97,11 @@ router.post('/', protect, asyncHandler(async (req, res) => {
     const { rating, title, comment, images, productId } = req.body;
     // Handle both body productId or param if mounted
     const targetProductId = productId || req.params.productId;
+
+    if (!req.user) {
+        res.status(401);
+        throw new Error('Not authorized');
+    }
 
     const product = await Product.findById(targetProductId);
     if (!product) {
