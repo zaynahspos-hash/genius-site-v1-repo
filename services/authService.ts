@@ -77,7 +77,8 @@ export const authService = {
   logout() {
     localStorage.removeItem('adminToken');
     localStorage.removeItem('adminUser');
-    window.location.href = '/#/admin/login'; 
+    // Updated redirect for BrowserRouter (Removed /#/)
+    window.location.href = '/admin/login'; 
   },
 
   getCurrentUser() {

@@ -5,16 +5,18 @@ import express from 'express';
 import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import mongoose from 'mongoose'; // Added for debug check
 import connectDB from './config/db.js';
 import { notFound, errorHandler } from './middleware/errorMiddleware.js';
 import securitySetup from './middleware/securityMiddleware.js';
 import maintenanceMiddleware from './middleware/maintenanceMiddleware.js';
-import User from './models/userModel.js'; // Import User for bootstrapping
+import User from './models/userModel.js'; 
 
 // Route Imports
 import mediaRoutes from './routes/mediaRoutes.js';
 import aiRoutes from './routes/aiRoutes.js';
 import authRoutes from './routes/authRoutes.js';
+import productRoutes from './routes/productRoutes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -28,8 +30,6 @@ const app = express();
 // --- SECURITY & CORS ---
 securitySetup(app);
 
-// Allow specific origins if needed, or use origin: true for broad access during dev/test
-// Important: When using credentials: true, 'Access-Control-Allow-Origin' cannot be '*'
 app.use(cors({
   origin: true, 
   credentials: true,
@@ -47,14 +47,14 @@ app.use((req, res, next) => {
 });
 
 // --- BOOTSTRAP ADMIN USER ---
-// Automatically ensure the admin user exists on server start
 const bootstrapAdmin = async () => {
     try {
-        // Wait a moment for DB connection to be established
         setTimeout(async () => {
             const adminEmail = process.env.ADMIN_EMAIL || 'totvoguepk@gmail.com';
-            const adminPassword = 'my112233'; // Default password
+            const adminPassword = 'my112233'; 
             
+            if (mongoose.connection.readyState !== 1) return; // Skip if DB not ready
+
             const user = await User.findOne({ email: adminEmail });
             
             if (!user) {
@@ -69,14 +69,13 @@ const bootstrapAdmin = async () => {
                 });
                 console.log('✅ Admin User Created Successfully.');
             } else {
-                console.log(`ℹ️ Admin User found. Resetting password to ensure access...`);
-                // Force reset password to ensure it matches hardcoded credentials
-                user.password = adminPassword;
-                user.role = 'admin'; // Ensure role is admin
-                await user.save();
-                console.log(`✅ Admin Password Reset to: ${adminPassword}`);
+                // Ensure role is correct
+                if (user.role !== 'admin') {
+                    user.role = 'admin';
+                    await user.save();
+                }
             }
-        }, 3000); // 3 second delay
+        }, 3000); 
     } catch (error) {
         console.error('Bootstrap Error:', error.message);
     }
@@ -84,16 +83,43 @@ const bootstrapAdmin = async () => {
 bootstrapAdmin();
 
 // --- API ROUTES ---
+
+// Simple Health Check
 app.get('/api/health', (req, res) => {
-  res.status(200).json({ 
-      status: 'UP', 
-      env: process.env.NODE_ENV 
-  });
+  res.status(200).json({ status: 'UP', env: process.env.NODE_ENV });
+});
+
+// Deep System Diagnostics Endpoint
+app.get('/api/health/system', async (req, res) => {
+    const dbState = mongoose.connection.readyState;
+    const dbStatusMap = {
+        0: 'Disconnected',
+        1: 'Connected',
+        2: 'Connecting',
+        3: 'Disconnecting',
+    };
+
+    res.json({
+        backend: 'Online',
+        database: {
+            status: dbStatusMap[dbState] || 'Unknown',
+            connected: dbState === 1,
+            host: mongoose.connection.host
+        },
+        environment: {
+            NODE_ENV: process.env.NODE_ENV,
+            HAS_MONGO_URI: !!process.env.MONGO_URI,
+            HAS_JWT_SECRET: !!process.env.JWT_SECRET,
+            HAS_API_KEY: !!process.env.API_KEY, // Gemini
+            HAS_CLOUDINARY: !!process.env.CLOUDINARY_CLOUD_NAME
+        }
+    });
 });
 
 app.use('/api/auth', authRoutes);
 app.use('/api/admin/media', mediaRoutes);
 app.use('/api/admin/ai', aiRoutes);
+app.use('/api/products', productRoutes);
 
 // --- PRODUCTION SERVING ---
 if (process.env.NODE_ENV === 'production') {
@@ -120,7 +146,6 @@ if (process.env.NODE_ENV === 'production') {
 app.use(notFound);
 app.use(errorHandler);
 
-// Global Error Safety
 process.on('uncaughtException', (err) => {
     console.error('UNCAUGHT EXCEPTION! 💥 Shutting down gracefully...');
     console.error(err.name, err.message);

@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
-import { HashRouter as Router, Routes, Route, useNavigate, Navigate, Outlet, useOutletContext } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useNavigate, Navigate, Outlet, useOutletContext, useLocation } from 'react-router-dom';
 
 // Admin Components
 import { Sidebar } from './components/admin/Sidebar';
@@ -57,10 +56,19 @@ import { SettingsProvider, useSettings } from './contexts/SettingsContext';
 import { Product, CartItem } from './types';
 import { ShoppingBag, X } from 'lucide-react';
 
+// Scroll to top on route change
+const ScrollToTop = () => {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+  return null;
+};
+
 const AdminLayout: React.FC = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false); // Mobile state
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
   const user = authService.getCurrentUser();
 
@@ -88,7 +96,6 @@ const AdminLayout: React.FC = () => {
         setMobileOpen={setMobileMenuOpen}
       />
       
-      {/* Fixed: Added missing onAddProduct and setActiveTab props to TopHeader */}
       <TopHeader 
         sidebarOpen={!sidebarCollapsed} 
         onMobileMenuClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -99,7 +106,6 @@ const AdminLayout: React.FC = () => {
       <div className={`flex-1 transition-all duration-300 p-4 md:p-8 pt-20 min-h-screen overflow-x-hidden
          ${sidebarCollapsed ? 'md:ml-20' : 'md:ml-64'} ml-0`}>
         <div className="max-w-7xl mx-auto">
-          {/* Fixed: Added missing setActiveTab prop to Dashboard */}
           {activeTab === 'dashboard' && <Dashboard setActiveTab={setActiveTab} />}
           {activeTab === 'reports' && <AdminReports />}
           {activeTab === 'media' && <AdminMedia />}
@@ -118,7 +124,9 @@ const AdminLayout: React.FC = () => {
           {activeTab === 'blog' && <AdminBlog />}
           {activeTab === 'pages' && <AdminPages />}
           {activeTab === 'contact' && <AdminContact />}
-          {activeTab === 'settings' && <AdminSettings />}
+          {(activeTab.startsWith('settings') || activeTab === 'account') && (
+              <AdminSettings initialTab={activeTab === 'account' ? 'system' : activeTab.replace('settings-', '')} />
+          )}
         </div>
       </div>
     </div>
@@ -280,6 +288,7 @@ export default function App() {
   return (
     <SettingsProvider>
       <Router>
+        <ScrollToTop />
         <Routes>
           <Route path="/" element={<StoreLayout />}>
               <Route index element={<StoreHomeWrapper />} />
