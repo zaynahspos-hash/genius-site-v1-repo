@@ -1,48 +1,39 @@
-const API_URL = 'http://localhost:5000/api/reports';
+import { API_BASE_URL, getAuthHeader, safeFetch } from './apiConfig';
 
-const getAuthHeader = () => {
-  const token = localStorage.getItem('adminToken');
-  return token ? { Authorization: `Bearer ${token}` } : {};
-};
+const API_URL = `${API_BASE_URL}/reports`;
 
 export const reportService = {
   async getSales(period = '30d') {
-    const res = await fetch(`${API_URL}/sales?period=${period}`, { headers: getAuthHeader() });
-    if (!res.ok) throw new Error('Failed to fetch sales report');
+    const res = await safeFetch(`${API_URL}/sales?period=${period}`, { headers: getAuthHeader() });
     return await res.json();
   },
 
   async getBreakdown() {
-    const res = await fetch(`${API_URL}/sales/breakdown`, { headers: getAuthHeader() });
-    if (!res.ok) throw new Error('Failed');
+    const res = await safeFetch(`${API_URL}/sales/breakdown`, { headers: getAuthHeader() });
     return await res.json();
   },
 
   async getOrders() {
-    const res = await fetch(`${API_URL}/orders`, { headers: getAuthHeader() });
-    if (!res.ok) throw new Error('Failed');
+    const res = await safeFetch(`${API_URL}/orders`, { headers: getAuthHeader() });
     return await res.json();
   },
 
   async getCustomers() {
-    const res = await fetch(`${API_URL}/customers`, { headers: getAuthHeader() });
-    if (!res.ok) throw new Error('Failed');
+    const res = await safeFetch(`${API_URL}/customers`, { headers: getAuthHeader() });
     return await res.json();
   },
 
   async getInventory() {
-    const res = await fetch(`${API_URL}/inventory`, { headers: getAuthHeader() });
-    if (!res.ok) throw new Error('Failed');
+    const res = await safeFetch(`${API_URL}/inventory`, { headers: getAuthHeader() });
     return await res.json();
   },
 
   async exportData(type: string) {
-    const res = await fetch(`${API_URL}/export`, {
+    const res = await safeFetch(`${API_URL}/export`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
         body: JSON.stringify({ type })
     });
-    if (!res.ok) throw new Error('Export failed');
     return await res.text(); // CSV string
   }
 };

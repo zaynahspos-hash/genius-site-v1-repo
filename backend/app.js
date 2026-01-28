@@ -25,19 +25,39 @@ const app = express();
 securitySetup(app);
 
 // Flexible CORS for Vercel and local dev
-const allowedOrigins = process.env.FRONTEND_URL 
-  ? process.env.FRONTEND_URL.split(',').map(url => url.trim()) 
-  : ['http://localhost:5173', 'http://localhost:3000', 'https://genius-site-v1-repo.onrender.com'];
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:3000',
+  'https://genius-site-v1-repo.onrender.com',
+  'https://genius-site-v1-repo-28vizhbyr-zaynahspos-hashs-projects.vercel.app'
+];
+
+// Add origins from environment variable if provided
+if (process.env.FRONTEND_URL) {
+  process.env.FRONTEND_URL.split(',').forEach(url => allowedOrigins.push(url.trim()));
+}
 
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    const isAllowed = allowedOrigins.some(allowed => {
+      if (allowed === '*') return true;
+      // Exact match or subdomain check
+      return origin === allowed || (allowed.startsWith('https://') && origin.endsWith(allowed.replace('https://', '')));
+    });
+
+    if (isAllowed) {
       callback(null, true);
     } else {
+      console.error(`CORS Blocked origin: ${origin}`);
       callback(new Error('Not allowed by CORS Policy'));
     }
   },
-  credentials: true
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
 app.use(express.json({ limit: '50mb' }));

@@ -1,24 +1,18 @@
-
 import { StoreSettings } from '../types';
 import { db } from './dbService';
+import { API_BASE_URL, getAuthHeader, safeFetch } from './apiConfig';
 
-const API_URL = 'http://localhost:5000/api/settings';
-const ADMIN_API = 'http://localhost:5000/api/admin/settings';
-
-const getAuthHeader = () => {
-  const token = localStorage.getItem('adminToken');
-  return token ? { Authorization: `Bearer ${token}` } : {};
-};
+const API_URL = `${API_BASE_URL}/settings`;
+const ADMIN_API = `${API_BASE_URL}/admin/settings`;
 
 export const settingsService = {
   async getSettings(): Promise<StoreSettings> {
-    const defaults = db.getSettings(); // Get robust local defaults
+    const defaults = db.getSettings(); 
     try {
       const res = await fetch(API_URL);
       if (!res.ok) throw new Error('Failed to fetch settings');
       const serverData = await res.json();
       
-      // Deep merge to ensure no section is undefined
       return {
           ...defaults,
           ...serverData,
@@ -49,7 +43,7 @@ export const settingsService = {
   async updateSettings(settings: Partial<StoreSettings>, section = 'all'): Promise<StoreSettings> {
     try {
       const payload = section === 'all' ? settings : settings[section as keyof StoreSettings];
-      const res = await fetch(`${ADMIN_API}/${section}`, {
+      const res = await safeFetch(`${ADMIN_API}/${section}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -58,7 +52,6 @@ export const settingsService = {
         body: JSON.stringify(payload),
       });
 
-      if (!res.ok) throw new Error('Failed to update settings');
       return await res.json();
     } catch (error) {
       console.warn('Backend API unreachable, updating local state');
@@ -75,12 +68,11 @@ export const settingsService = {
   },
 
   async sendTestEmail(to: string) {
-      const res = await fetch(`${ADMIN_API}/test-email`, {
+      const res = await safeFetch(`${ADMIN_API}/test-email`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
           body: JSON.stringify({ to })
       });
-      if(!res.ok) throw new Error('Failed to send test email');
       return await res.json();
   },
 
@@ -96,12 +88,11 @@ export const settingsService = {
   },
 
   async saveMenu(menu: any) {
-      const res = await fetch(`${ADMIN_API}/menus`, {
+      const res = await safeFetch(`${ADMIN_API}/menus`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
           body: JSON.stringify(menu)
       });
-      if(!res.ok) throw new Error('Failed to save menu');
       return await res.json();
   }
 };

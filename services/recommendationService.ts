@@ -1,31 +1,40 @@
-const API_URL = 'http://localhost:5000/api/store/recommendations';
+import { API_BASE_URL, getAuthHeader, safeFetch } from './apiConfig';
 
-const getAuthHeader = () => {
-  const token = localStorage.getItem('customerToken');
-  return token ? { Authorization: `Bearer ${token}` } : {};
-};
+const API_URL = `${API_BASE_URL}/store/recommendations`;
 
 export const recommendationService = {
   async getRelated(productId: string) {
-    const res = await fetch(`${API_URL}/products/${productId}/related`);
-    if (!res.ok) return [];
-    return await res.json();
+    try {
+      const res = await fetch(`${API_URL}/products/${productId}/related`);
+      if (!res.ok) return [];
+      return await res.json();
+    } catch (e) {
+      return [];
+    }
   },
 
   async getFrequentlyBought(productId: string) {
-    const res = await fetch(`${API_URL}/products/${productId}/frequently-bought`);
-    if (!res.ok) return [];
-    return await res.json();
+    try {
+      const res = await fetch(`${API_URL}/products/${productId}/frequently-bought`);
+      if (!res.ok) return [];
+      return await res.json();
+    } catch (e) {
+      return [];
+    }
   },
 
   async getRecentlyViewed() {
-    // Get from local storage first to send IDs if guest
-    const localIds = JSON.parse(localStorage.getItem('recentlyViewed') || '[]');
-    const query = localIds.length > 0 ? `?ids=${localIds.join(',')}` : '';
-    
-    const res = await fetch(`${API_URL}/recently-viewed${query}`, { headers: getAuthHeader() });
-    if (!res.ok) return [];
-    return await res.json();
+    try {
+      // Get from local storage first to send IDs if guest
+      const localIds = JSON.parse(localStorage.getItem('recentlyViewed') || '[]');
+      const query = localIds.length > 0 ? `?ids=${localIds.join(',')}` : '';
+      
+      const res = await fetch(`${API_URL}/recently-viewed${query}`, { headers: getAuthHeader('customer') });
+      if (!res.ok) return [];
+      return await res.json();
+    } catch (e) {
+      return [];
+    }
   },
 
   async trackView(productId: string) {
@@ -34,16 +43,22 @@ export const recommendationService = {
     recent = [productId, ...recent.filter((id: string) => id !== productId)].slice(0, 10);
     localStorage.setItem('recentlyViewed', JSON.stringify(recent));
 
-    // 2. Server Update
-    await fetch(`${API_URL}/track-view/${productId}`, { 
-        method: 'POST',
-        headers: getAuthHeader()
-    });
+    // 2. Server Update (non-blocking)
+    try {
+      await fetch(`${API_URL}/track-view/${productId}`, { 
+          method: 'POST',
+          headers: getAuthHeader('customer')
+      });
+    } catch (e) {}
   },
 
   async getTrending() {
+    try {
       const res = await fetch(`${API_URL}/trending`);
       if(!res.ok) return [];
       return await res.json();
+    } catch (e) {
+      return [];
+    }
   }
 };

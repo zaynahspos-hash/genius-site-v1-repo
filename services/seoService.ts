@@ -1,41 +1,33 @@
-const API_URL = 'http://localhost:5000/api/seo';
-const ADMIN_API = 'http://localhost:5000/api/admin/seo'; // To keep consistent naming even if route is same file
+import { API_BASE_URL, getAuthHeader, safeFetch } from './apiConfig';
 
-const getAuthHeader = () => {
-  const token = localStorage.getItem('adminToken');
-  return token ? { Authorization: `Bearer ${token}` } : {};
-};
+const API_URL = `${API_BASE_URL}/seo`;
 
 export const seoService = {
   // Admin
   async getRedirects() {
-    const res = await fetch(`${API_URL}/redirects`, { headers: getAuthHeader() });
-    if (!res.ok) throw new Error('Failed to fetch redirects');
+    const res = await safeFetch(`${API_URL}/redirects`, { headers: getAuthHeader() });
     return await res.json();
   },
 
   async createRedirect(data: { from: string, to: string, type: number }) {
-    const res = await fetch(`${API_URL}/redirects`, {
+    const res = await safeFetch(`${API_URL}/redirects`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
       body: JSON.stringify(data)
     });
-    if (!res.ok) throw new Error('Failed to create redirect');
     return await res.json();
   },
 
   async deleteRedirect(id: string) {
-    const res = await fetch(`${API_URL}/redirects/${id}`, {
+    const res = await safeFetch(`${API_URL}/redirects/${id}`, {
       method: 'DELETE',
       headers: getAuthHeader()
     });
-    if (!res.ok) throw new Error('Failed to delete redirect');
     return await res.json();
   },
 
   async runAudit() {
-    const res = await fetch(`${API_URL}/audit`, { headers: getAuthHeader() });
-    if (!res.ok) throw new Error('Failed to run audit');
+    const res = await safeFetch(`${API_URL}/audit`, { headers: getAuthHeader() });
     return await res.json();
   },
 

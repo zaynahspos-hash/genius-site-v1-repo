@@ -1,42 +1,34 @@
-import { API_BASE_URL } from './apiConfig';
+import { API_BASE_URL, safeFetch } from './apiConfig';
 
 const AUTH_URL = `${API_BASE_URL}/auth`;
 
 export const authService = {
   async login(email, password) {
-    const res = await fetch(`${AUTH_URL}/login`, {
+    const res = await safeFetch(`${AUTH_URL}/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password }),
     });
 
     const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data.message || 'Login failed');
-    }
-
     this.setSession(data);
     return data;
   },
 
   async register(name, email, password, storeName) {
-    const res = await fetch(`${AUTH_URL}/register`, {
+    const res = await safeFetch(`${AUTH_URL}/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name, email, password, storeName }),
     });
 
     const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data.message || 'Registration failed');
-    }
-
     this.setSession(data);
     return data;
   },
 
   async forgotPassword(email: string) {
-    const res = await fetch(`${AUTH_URL}/forgot-password`, {
+    const res = await safeFetch(`${AUTH_URL}/forgot-password`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email }),
@@ -45,12 +37,11 @@ export const authService = {
   },
 
   async resetPassword(token: string, password: string) {
-    const res = await fetch(`${AUTH_URL}/reset-password/${token}`, {
+    const res = await safeFetch(`${AUTH_URL}/reset-password/${token}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ password }),
     });
-    if (!res.ok) throw new Error('Failed to reset password');
     return await res.json();
   },
 

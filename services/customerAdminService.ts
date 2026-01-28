@@ -1,20 +1,15 @@
-const API_URL = 'http://localhost:5000/api/admin/customers';
+import { API_BASE_URL, getAuthHeader, safeFetch } from './apiConfig';
 
-const getAuthHeader = () => {
-  const token = localStorage.getItem('adminToken');
-  return token ? { Authorization: `Bearer ${token}` } : {};
-};
+const API_URL = `${API_BASE_URL}/admin/customers`;
 
 export const customerAdminService = {
   async getAll() {
-    const res = await fetch(API_URL, { headers: getAuthHeader() });
-    if (!res.ok) throw new Error('Failed to fetch customers');
+    const res = await safeFetch(API_URL, { headers: getAuthHeader() });
     return await res.json();
   },
 
   async getById(id: string) {
-    const res = await fetch(`${API_URL}/${id}`, { headers: getAuthHeader() });
-    if (!res.ok) throw new Error('Failed to fetch customer');
+    const res = await safeFetch(`${API_URL}/${id}`, { headers: getAuthHeader() });
     return await res.json();
   }
 };
