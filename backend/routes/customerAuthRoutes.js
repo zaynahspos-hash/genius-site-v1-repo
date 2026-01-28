@@ -1,6 +1,7 @@
 import express from 'express';
 import asyncHandler from 'express-async-handler';
 import User from '../models/userModel.js';
+import Order from '../models/orderModel.js';
 import generateToken from '../utils/generateToken.js';
 import { protect } from '../middleware/checkAuth.js';
 
@@ -61,7 +62,7 @@ router.post('/login', asyncHandler(async (req, res) => {
 // @desc    Get customer profile
 // @route   GET /api/customer/profile
 router.get('/profile', protect, asyncHandler(async (req, res) => {
-    const user = await User.findById(req.user._id).select('-password');
+    const user = await User.findById(req.user._id).select('-password').populate('wishlist');
     if (user) {
         res.json(user);
     } else {
@@ -98,15 +99,8 @@ router.put('/profile', protect, asyncHandler(async (req, res) => {
 // @desc    Get customer orders
 // @route   GET /api/customer/orders
 router.get('/orders', protect, asyncHandler(async (req, res) => {
-    // In a real app, you'd import the Order model. 
-    // This is a placeholder to prevent crashes if Order model isn't imported
-    // Assuming Order model exists, otherwise return empty
-    try {
-        // const orders = await Order.find({ user: req.user._id });
-        res.json([]); 
-    } catch (error) {
-        res.json([]);
-    }
+    const orders = await Order.find({ user: req.user._id }).sort({ createdAt: -1 });
+    res.json(orders);
 }));
 
 // @desc    Add address
@@ -144,16 +138,13 @@ router.post('/wishlist', protect, asyncHandler(async (req, res) => {
     const user = await User.findById(req.user._id);
     
     if (user) {
-        // Check if product in wishlist
         const index = user.wishlist.indexOf(productId);
         if (index > -1) {
-            user.wishlist.splice(index, 1); // Remove
+            user.wishlist.splice(index, 1); 
         } else {
-            user.wishlist.push(productId); // Add
+            user.wishlist.push(productId); 
         }
         await user.save();
-        
-        // Return full populated wishlist in real app, here just the IDs
         res.json(user.wishlist);
     } else {
         res.status(404);

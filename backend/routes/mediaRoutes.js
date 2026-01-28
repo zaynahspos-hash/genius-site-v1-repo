@@ -1,6 +1,7 @@
 import express from 'express';
 import multer from 'multer';
 import streamifier from 'streamifier';
+import mongoose from 'mongoose';
 import cloudinary from '../config/cloudinary.js';
 import { Media, Folder } from '../models/mediaModel.js';
 import { protect, admin } from '../middleware/checkAuth.js';
@@ -50,8 +51,16 @@ router.get('/', protect, admin, asyncHandler(async (req, res) => {
     const { folder, search } = req.query;
     let query = {};
     
-    if (folder === 'uncategorized') query.folder = null;
-    else if (folder && folder !== 'all') query.folder = folder;
+    if (folder === 'uncategorized') {
+        query.folder = null;
+    } else if (folder && folder !== 'all') {
+        if (mongoose.Types.ObjectId.isValid(folder)) {
+            query.folder = folder;
+        } else {
+            // Invalid folder ID, return empty instead of crashing
+            return res.json({ media: [] });
+        }
+    }
     
     if (search) query.filename = { $regex: search, $options: 'i' };
 

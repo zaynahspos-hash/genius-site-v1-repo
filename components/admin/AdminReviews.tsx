@@ -17,7 +17,6 @@ export const AdminReviews: React.FC = () => {
       setError('');
       try {
           const data = await reviewService.getAllReviews(status);
-          // FIX: data is { reviews: [], total: ... }, we need data.reviews
           if (data && Array.isArray(data.reviews)) {
               setReviews(data.reviews);
           } else if (Array.isArray(data)) {
@@ -37,6 +36,16 @@ export const AdminReviews: React.FC = () => {
           await reviewService.updateStatus(id, newStatus);
           fetchReviews();
       } catch(e) { alert('Failed to update status'); }
+  };
+
+  const formatDate = (dateString: string) => {
+      try {
+          if (!dateString) return 'N/A';
+          const date = new Date(dateString);
+          return isNaN(date.getTime()) ? 'N/A' : date.toLocaleDateString();
+      } catch (e) {
+          return 'N/A';
+      }
   };
 
   return (
@@ -93,7 +102,7 @@ export const AdminReviews: React.FC = () => {
                                     </td>
                                     <td className="px-6 py-4">
                                         <div className="text-sm font-medium text-gray-900 dark:text-white">{review.user?.name || 'Anonymous'}</div>
-                                        <div className="text-xs text-gray-500 dark:text-gray-400">{new Date(review.createdAt).toLocaleDateString()}</div>
+                                        <div className="text-xs text-gray-500 dark:text-gray-400">{formatDate(review.createdAt)}</div>
                                     </td>
                                     <td className="px-6 py-4">
                                         <div className="flex text-amber-400">
@@ -142,7 +151,7 @@ export const AdminReviews: React.FC = () => {
                                     </div>
                                     <div>
                                         <p className="text-sm font-bold text-gray-900 dark:text-white">{review.user?.name || 'Anonymous'}</p>
-                                        <p className="text-[10px] text-gray-500 dark:text-gray-400">{new Date(review.createdAt).toLocaleDateString()}</p>
+                                        <p className="text-[10px] text-gray-500 dark:text-gray-400">{formatDate(review.createdAt)}</p>
                                     </div>
                                 </div>
                                 <span className={`px-2 py-1 rounded text-xs font-bold capitalize 
